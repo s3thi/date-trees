@@ -6,6 +6,20 @@
 - Entry point: `src/main.ts` compiled to `main.js` and loaded by Obsidian.
 - Required release artifacts: `main.js`, `manifest.json`, and optional `styles.css`.
 
+## Version control
+
+- **This project uses [Jujutsu (`jj`)](https://jj-vcs.github.io/jj/) for version control, NOT Git.**
+- **NEVER run any Git commands (`git ...`) for any reason, under any circumstances.** This includes read-only commands like `git status`, `git log`, and `git diff` — do not run them. Even though a `.git` directory may exist (Jujutsu uses Git as a storage backend), you must not interact with it via the `git` CLI.
+- Use `jj` commands for all version control operations instead. Common equivalents:
+    - `jj status` instead of `git status`
+    - `jj log` instead of `git log`
+    - `jj diff` instead of `git diff`
+    - `jj commit` / `jj describe` instead of `git commit`
+    - `jj bookmark` instead of `git branch`
+- If a task seems to require a Git command, stop and use the `jj` equivalent, or ask the user how to proceed. Do not fall back to `git` under any condition.
+- When unsure about a `jj` command, its flags, or behavior, look it up in the CLI reference instead of guessing: https://www.jj-vcs.dev/latest/cli-reference/
+- General Jujutsu documentation: https://jj-vcs.github.io/jj/
+
 ## Environment & tooling
 
 - Node.js: use current LTS (Node 18+ recommended).
