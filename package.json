@@ -1,7 +1,7 @@
 {
 	"name": "date-trees",
 	"version": "1.0.0",
-	"description": "An Obsidian plugin.",
+	"description": "Organize chronological notes in a date tree directory structure.",
 	"main": "main.js",
 	"type": "module",
 	"scripts": {

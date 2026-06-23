@@ -1,15 +1,24 @@
 # Date Trees
 
-An Obsidian plugin.
+An Obsidian plugin for organizing chronological notes in a date tree directory structure, inspired by org-mode.
 
-## Development
+## What is a date tree?
 
-- Make sure your NodeJS is at least v18 (`node --version`).
-- `pnpm install` to install dependencies.
-- `pnpm run dev` to start compilation in watch mode.
-- `pnpm run build` to compile a production bundle.
-- `pnpm run lint` to lint the project.
+A date tree is a folder hierarchy that organizes notes by date:
 
-## Manually installing the plugin
++ Journal
+  + 2026
+    + 2026-05 May
+      - 2026-05-01 Friday.md
+      - 2026-05-02 Saturday.md
+      - 2026-05-03 Sunday.md
 
-- Copy over `main.js`, `styles.css`, `manifest.json` to your vault at `VaultFolder/.obsidian/plugins/date-trees/`.
+Each year is a folder. Each month is a folder named `YYYY-MM Month`. Each day is a file named `YYYY-MM-DD Weekday.md`.
+
+## Usage
+
+- In plugin settings, mark one or more folders in your vault as date trees.
+- Use the **Create today's note** command to add a file for today inside a date tree. The plugin creates any missing year/month folders for you.
+- When viewing a note inside a date tree, use **Jump to today** to open today's file, and **Previous day** / **Next day** to navigate between daily notes.
+
+New day files are created from a template you choose in settings.

@@ -3,7 +3,7 @@
 	"name": "Date Trees",
 	"version": "1.0.0",
 	"minAppVersion": "1.0.0",
-	"description": "An Obsidian plugin.",
+	"description": "Organize chronological notes in a date tree directory structure.",
 	"author": "Ankur Sethi",
 	"authorUrl": "https://ankursethi.com",
 	"isDesktopOnly": false
