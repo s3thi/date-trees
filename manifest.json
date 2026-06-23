@@ -1,0 +1,10 @@
+{
+	"id": "date-trees",
+	"name": "Date Trees",
+	"version": "1.0.0",
+	"minAppVersion": "1.0.0",
+	"description": "An Obsidian plugin.",
+	"author": "Ankur Sethi",
+	"authorUrl": "https://ankursethi.com",
+	"isDesktopOnly": false
+}
