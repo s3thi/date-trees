@@ -1,8 +1,8 @@
 import { Plugin } from "obsidian";
 import {
-  DEFAULT_SETTINGS,
   DateTreesSettings,
   DateTreesSettingTab,
+  normalizeSettings,
 } from "./settings";
 
 export default class DateTreesPlugin extends Plugin {
@@ -17,11 +17,7 @@ export default class DateTreesPlugin extends Plugin {
   onunload() {}
 
   async loadSettings() {
-    this.settings = Object.assign(
-      {},
-      DEFAULT_SETTINGS,
-      (await this.loadData()) as Partial<DateTreesSettings>,
-    );
+    this.settings = normalizeSettings(await this.loadData());
   }
 
   async saveSettings() {
