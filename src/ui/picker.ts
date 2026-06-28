@@ -1,6 +1,6 @@
 import { App, FuzzyMatch, FuzzySuggestModal } from "obsidian";
 
-export type PickResult<T> = { cancelled: true } | { cancelled: false; value: T };
+type PickResult<T> = { wasCancelled: true } | { wasCancelled: false; value: T };
 
 interface PickOptions {
   placeholder: string;
@@ -41,7 +41,7 @@ class FuzzyPickModal<T> extends FuzzySuggestModal<T> {
     evt: MouseEvent | KeyboardEvent,
   ): void {
     this.resolved = true;
-    this.resolve({ cancelled: false, value: value.item });
+    this.resolve({ wasCancelled: false, value: value.item });
     super.selectSuggestion(value, evt);
   }
 
@@ -51,12 +51,12 @@ class FuzzyPickModal<T> extends FuzzySuggestModal<T> {
   onClose(): void {
     super.onClose();
     // Reached without selectSuggestion firing => dismissed (Esc / click-out).
-    if (!this.resolved) this.resolve({ cancelled: true });
+    if (!this.resolved) this.resolve({ wasCancelled: true });
   }
 }
 
 /** Open a fuzzy picker over `items` and resolve with the choice (or cancelled). */
-export function pick<T>(
+function pick<T>(
   app: App,
   items: T[],
   itemText: (item: T) => string,
@@ -69,3 +69,5 @@ export function pick<T>(
     modal.open();
   });
 }
+
+export { type PickResult, pick };

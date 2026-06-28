@@ -1,26 +1,16 @@
 import { Notice, TFile, TFolder, Vault } from "obsidian";
 
-import { buildDayPath } from "../core/dateTreePath";
+import { buildDayPath } from "../core/date-tree-path";
 import { expandTemplate } from "../core/template";
 import type DateTreesPlugin from "../main";
 import type { DateTreeEntry } from "../types";
-import { openFileInTab } from "../ui/openFile";
+import { openFileInTab } from "../ui/open-file";
 import { pick } from "../ui/picker";
 
 /**
- * Command-palette entry: pick a configured date tree, then ensure today's day
- * file exists inside it (creating any missing year/month folders along the
- * way), and finally open the file.
- *
- * - No date trees configured → notice and abort.
- * - Exactly one date tree → use it directly, no picker.
- * - Picker dismissed → abort silently.
- * - File already exists → no creation, just open it.
- *
- * When the date tree has a configured `templatePath`, the template is expanded
- * (see {@link expandTemplate}) and used as the new note's initial content. If
- * the template file is missing, a notice is shown and an empty note is
- * created as a fallback.
+ * Allows the user to pick a configured date tree, then ensure today's day file
+ * exists inside it (creating any missing year/month folders along the way), and
+ * finally opens the file.
  */
 export async function createTodaysNote(plugin: DateTreesPlugin): Promise<void> {
   if (plugin.settings.trees.length === 0) {
@@ -41,9 +31,11 @@ export async function createTodaysNote(plugin: DateTreesPlugin): Promise<void> {
         title: "Today's note in date tree",
       },
     );
-    if (result.cancelled) {
+
+    if (result.wasCancelled) {
       return;
     }
+
     entry = result.value;
   }
 
@@ -80,9 +72,8 @@ export async function createTodaysNote(plugin: DateTreesPlugin): Promise<void> {
 }
 
 /**
- * Create `path` as a folder if it doesn't already exist. Idempotent: a no-op
- * when the folder is already present. If a file occupies the path, let
- * `createFolder` throw — that's corrupt vault state worth surfacing.
+ * Creates `path` as a folder if it doesn't already exist. No-op when folder
+ * exists.
  */
 async function ensureFolder(vault: Vault, path: string): Promise<void> {
   if (vault.getAbstractFileByPath(path) instanceof TFolder) {

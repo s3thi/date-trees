@@ -1,62 +1,10 @@
-import {
-  App,
-  PluginSettingTab,
-  SettingGroup,
-  normalizePath,
-} from "obsidian";
+import { App, PluginSettingTab, SettingGroup } from "obsidian";
 
-import { removeDateTree } from "./core/dateTrees";
-import type DateTreesPlugin from "./main";
-import {
-  type DateTreeEntry,
-  type DateTreeLocale,
-  type DateTreesSettings,
-} from "./types";
+import type DateTreesPlugin from "../main";
+import { type DateTreeLocale } from "../types";
+import { unmarkDateTree } from "../core/settings";
 
-/**
- * Coerce arbitrary persisted data into a valid settings object. `loadData()`
- * can return anything (corrupt file, older schema, hand-edited JSON), so we
- * never trust its shape and drop entries that don't look like a DateTreeEntry.
- */
-export function normalizeSettings(data: unknown): DateTreesSettings {
-  const raw = (data ?? {}) as Partial<DateTreesSettings>;
-  const trees = Array.isArray(raw.trees) ? raw.trees : [];
-
-  const cleaned: DateTreeEntry[] = [];
-  const seen = new Set<string>();
-
-  for (const entry of trees) {
-    if (!entry || typeof entry !== "object") {
-      continue;
-    }
-
-    const folderPath =
-      typeof entry.folderPath === "string"
-        ? normalizePath(entry.folderPath.trim())
-        : "";
-
-    if (folderPath.length === 0 || seen.has(folderPath)) {
-      continue;
-    }
-
-    const templatePath =
-      typeof entry.templatePath === "string" && entry.templatePath.trim()
-        ? normalizePath(entry.templatePath.trim())
-        : "";
-
-    seen.add(folderPath);
-    cleaned.push({ folderPath, templatePath });
-  }
-
-  const locale: DateTreeLocale =
-    raw.locale === "english" || raw.locale === "system"
-      ? raw.locale
-      : "english";
-
-  return { locale, trees: cleaned };
-}
-
-export class DateTreesSettingTab extends PluginSettingTab {
+class DateTreesSettingTab extends PluginSettingTab {
   plugin: DateTreesPlugin;
 
   constructor(app: App, plugin: DateTreesPlugin) {
@@ -79,7 +27,7 @@ export class DateTreesSettingTab extends PluginSettingTab {
       setting
         .setName("Locale")
         .setDesc(
-          "Controls the language used for date trees. English overrides the system locale; System uses the locale of your operating system.",
+          "Controls the language used for day and month names in the date tree.",
         )
         .addDropdown((dropdown) => {
           dropdown
@@ -103,7 +51,7 @@ export class DateTreesSettingTab extends PluginSettingTab {
       }),
     );
     foldersDescText.appendText(
-      ". Equivalent commands are also available in the command palette.",
+      ". You can also use the commands available in the command palette.",
     );
 
     const foldersHeading = createFragment();
@@ -133,7 +81,7 @@ export class DateTreesSettingTab extends PluginSettingTab {
               .setIcon("trash")
               .setTooltip("Remove")
               .onClick(async () => {
-                await removeDateTree(this.plugin, entry.folderPath);
+                await unmarkDateTree(this.plugin, entry.folderPath);
                 this.rerender();
               }),
           );
@@ -145,3 +93,5 @@ export class DateTreesSettingTab extends PluginSettingTab {
     this.display();
   }
 }
+
+export { DateTreesSettingTab };

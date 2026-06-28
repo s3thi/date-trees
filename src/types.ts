@@ -1,16 +1,23 @@
-export type DateTreeLocale = "english" | "system";
+type DateTreeLocale = "english" | "system";
 
-export interface DateTreeEntry {
+interface DateTreeEntry {
   folderPath: string;
   templatePath: string;
 }
 
-export interface DateTreesSettings {
+interface DateTreesSettings {
   locale: DateTreeLocale;
   trees: DateTreeEntry[];
 }
 
-export const DEFAULT_SETTINGS: DateTreesSettings = {
+const DEFAULT_SETTINGS: DateTreesSettings = {
   locale: "english",
   trees: [],
+};
+
+export {
+  type DateTreeLocale,
+  type DateTreeEntry,
+  type DateTreesSettings,
+  DEFAULT_SETTINGS,
 };
