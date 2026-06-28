@@ -7,7 +7,11 @@ import {
 
 import { removeDateTree } from "./core/dateTrees";
 import type DateTreesPlugin from "./main";
-import { type DateTreeEntry, type DateTreesSettings } from "./types";
+import {
+  type DateTreeEntry,
+  type DateTreeLocale,
+  type DateTreesSettings,
+} from "./types";
 
 /**
  * Coerce arbitrary persisted data into a valid settings object. `loadData()`
@@ -44,7 +48,12 @@ export function normalizeSettings(data: unknown): DateTreesSettings {
     cleaned.push({ folderPath, templatePath });
   }
 
-  return { trees: cleaned };
+  const locale: DateTreeLocale =
+    raw.locale === "english" || raw.locale === "system"
+      ? raw.locale
+      : "english";
+
+  return { locale, trees: cleaned };
 }
 
 export class DateTreesSettingTab extends PluginSettingTab {
@@ -58,6 +67,31 @@ export class DateTreesSettingTab extends PluginSettingTab {
   display(): void {
     const { containerEl } = this;
     containerEl.empty();
+
+    const generalHeading = createFragment();
+    generalHeading.createDiv({ cls: "setting-item-name", text: "General" });
+
+    const generalSettingGroup = new SettingGroup(containerEl).setHeading(
+      generalHeading,
+    );
+
+    generalSettingGroup.addSetting((setting) => {
+      setting
+        .setName("Locale")
+        .setDesc(
+          "Controls the language used for date trees. English overrides the system locale; System uses the locale of your operating system.",
+        )
+        .addDropdown((dropdown) => {
+          dropdown
+            .addOption("english", "English")
+            .addOption("system", "System")
+            .setValue(this.plugin.settings.locale)
+            .onChange(async (value) => {
+              this.plugin.settings.locale = value as DateTreeLocale;
+              await this.plugin.saveSettings();
+            });
+        });
+    });
 
     const foldersDescText = createFragment();
     foldersDescText.appendText(

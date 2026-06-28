@@ -15,7 +15,7 @@ A date tree is a folder hierarchy that organizes notes by date:
 
 Each year is a folder. Each month is a folder named `YYYY-MM Month`. Each day is a file named `YYYY-MM-DD Weekday.md`.
 
-Month and weekday names are currently always US English (e.g. `May`, `Friday`). Selecting an alternative locale is a planned enhancement.
+Month and weekday names follow the configured locale. **English** uses US English names (e.g. `May`, `Friday`); **System** uses your operating system's locale.
 
 ## Usage
 

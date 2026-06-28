@@ -47,6 +47,7 @@ export async function createTodaysNote(plugin: DateTreesPlugin): Promise<void> {
   const { yearFolderPath, monthFolderPath, dayFilePath } = buildDayPath(
     entry.folderPath,
     new Date(),
+    plugin.settings.locale,
   );
 
   const { vault } = plugin.app;
