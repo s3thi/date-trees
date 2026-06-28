@@ -5,11 +5,15 @@ import {
   markFolderAsDateTreeViaPicker,
 } from "./commands/markDateTree";
 import {
-  DateTreesSettings,
+  unmarkFolderAsDateTree,
+  unmarkFolderAsDateTreeViaPicker,
+} from "./commands/unmarkDateTree";
+import { isDateTree } from "./core/dateTrees";
+import {
   DateTreesSettingTab,
-  DEFAULT_SETTINGS,
   normalizeSettings,
 } from "./settings";
+import { DEFAULT_SETTINGS, type DateTreesSettings } from "./types";
 
 export default class DateTreesPlugin extends Plugin {
   settings: DateTreesSettings = DEFAULT_SETTINGS;
@@ -24,12 +28,25 @@ export default class DateTreesPlugin extends Plugin {
           return;
         }
 
+        const isMarked = isDateTree(this, file.path);
+
         menu.addItem((item) => {
-          item.setTitle("Mark as date tree");
+          item.setTitle(
+            isMarked ? "Change date tree template" : "Mark as date tree",
+          );
           item.onClick(() => {
             void markFolderAsDateTree(this, file);
           });
         });
+
+        if (isMarked) {
+          menu.addItem((item) => {
+            item.setTitle("Unmark as date tree");
+            item.onClick(() => {
+              void unmarkFolderAsDateTree(this, file);
+            });
+          });
+        }
       }),
     );
 
@@ -38,6 +55,14 @@ export default class DateTreesPlugin extends Plugin {
       name: "Mark folder as date tree",
       callback: () => {
         void markFolderAsDateTreeViaPicker(this);
+      },
+    });
+
+    this.addCommand({
+      id: "unmark-folder-as-date-tree",
+      name: "Unmark folder as date tree",
+      callback: () => {
+        void unmarkFolderAsDateTreeViaPicker(this);
       },
     });
   }

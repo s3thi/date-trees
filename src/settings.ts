@@ -5,20 +5,9 @@ import {
   normalizePath,
 } from "obsidian";
 
-import DateTreesPlugin from "./main";
-
-export interface DateTreeEntry {
-  folderPath: string;
-  templatePath: string;
-}
-
-export interface DateTreesSettings {
-  trees: DateTreeEntry[];
-}
-
-export const DEFAULT_SETTINGS: DateTreesSettings = {
-  trees: [],
-};
+import { removeDateTree } from "./core/dateTrees";
+import type DateTreesPlugin from "./main";
+import { type DateTreeEntry, type DateTreesSettings } from "./types";
 
 /**
  * Coerce arbitrary persisted data into a valid settings object. `loadData()`
@@ -72,14 +61,16 @@ export class DateTreesSettingTab extends PluginSettingTab {
 
     const foldersDescText = createFragment();
     foldersDescText.appendText(
-      "To mark folders as date trees, right click them in the navigator and click ",
+      "To mark folders as date trees, right-click them in the file explorer and click ",
     );
     foldersDescText.appendChild(
       createEl("strong", {
         text: "Mark as date tree",
       }),
     );
-    foldersDescText.appendText(".");
+    foldersDescText.appendText(
+      ". Equivalent commands are also available in the command palette.",
+    );
 
     const foldersHeading = createFragment();
     foldersHeading.createDiv({ cls: "setting-item-name", text: "Folders" });
@@ -108,10 +99,7 @@ export class DateTreesSettingTab extends PluginSettingTab {
               .setIcon("trash")
               .setTooltip("Remove")
               .onClick(async () => {
-                this.plugin.settings.trees = this.plugin.settings.trees.filter(
-                  (t) => t.folderPath !== entry.folderPath,
-                );
-                await this.plugin.saveSettings();
+                await removeDateTree(this.plugin, entry.folderPath);
                 this.rerender();
               }),
           );
