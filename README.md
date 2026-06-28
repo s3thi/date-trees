@@ -15,12 +15,18 @@ A date tree is a folder hierarchy that organizes notes by date:
 
 Each year is a folder. Each month is a folder named `YYYY-MM Month`. Each day is a file named `YYYY-MM-DD Weekday.md`.
 
-Month and weekday names follow the configured locale. **English** uses US English names (e.g. `May`, `Friday`); **System** uses your operating system's locale.
+Month and weekday names follow the configured locale. **English** uses US English names (e.g. `May`, `Friday`); **System** uses your operating system's locale. The numeric `YYYY-MM-DD` prefix is always Gregorian with Latin digits, so day files stay consistently sortable regardless of locale.
 
 ## Usage
 
-- In plugin settings, mark one or more folders in your vault as date trees.
-- Use the **Today's note in date tree** command to add a file for today inside a date tree. The plugin creates any missing year/month folders for you.
-- When viewing a note inside a date tree, use **Jump to today** to open today's file, and **Previous day** / **Next day** to navigate between daily notes.
+- Mark folders as date trees by right-clicking them in the file explorer and selecting **Mark as date tree**, or via the **Mark folder as date tree** command in the command palette. You can mark multiple folders, and even the vault root.
+- When marking a folder, you can optionally choose a template for that tree. To change it later, right-click an already-marked folder and select **Change date tree template**.
+- To remove a date tree, right-click it and select **Unmark as date tree**, use the **Unmark folder as date tree** command, or use the trash button next to the entry in plugin settings.
+- The settings tab lists your configured date trees and their templates (but cannot add or edit them).
+- Use the **Today's note in date tree** command to add a file for today inside a date tree. If you have more than one date tree, you'll be asked which to use. The plugin creates any missing year/month folders for you. If today's file already exists, it is opened instead of recreated.
 
-New day files are created from a template you choose in settings.
+## Planned
+
+The following features are not yet implemented:
+
+- **Previous day**, and **Next day** commands for navigating between daily notes inside a date tree.
