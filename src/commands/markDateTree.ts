@@ -1,5 +1,6 @@
 import {
   App,
+  FuzzyMatch,
   FuzzySuggestModal,
   Notice,
   TFile,
@@ -78,19 +79,25 @@ class TemplatePickerModal extends FuzzySuggestModal<TFile | null> {
     return item === null ? "No template" : item.path;
   }
 
-  onChooseItem(item: TFile | null): void {
+  // selectSuggestion is the single entry point Obsidian calls for any
+  // successful pick (click or Enter). Settle here, before super closes the
+  // modal, so onClose sees `resolved === true` synchronously.
+  selectSuggestion(
+    value: FuzzyMatch<TFile | null>,
+    evt: MouseEvent | KeyboardEvent,
+  ): void {
     this.resolved = true;
-    this.resolve({ cancelled: false, file: item });
+    this.resolve({ cancelled: false, file: value.item });
+    super.selectSuggestion(value, evt);
   }
+
+  // Required abstract member, but selectSuggestion already did the work.
+  onChooseItem(): void {}
 
   onClose(): void {
     super.onClose();
-    // selectSuggestion() calls close() before onChooseItem(), so defer the
-    // cancellation check until the current synchronous flow finishes. If an
-    // item was chosen, `resolved` will be true by the time this runs.
-    queueMicrotask(() => {
-      if (!this.resolved) this.resolve({ cancelled: true });
-    });
+    // Reached without selectSuggestion firing => dismissed (Esc / click-out).
+    if (!this.resolved) this.resolve({ cancelled: true });
   }
 }
 
