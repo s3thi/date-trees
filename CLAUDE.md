@@ -165,12 +165,17 @@ Follow Obsidian's **Developer Policies** and **Plugin Guidelines**. In particula
 - Provide defaults and validation in settings.
 - Write idempotent code paths so reload/unload doesn't leak listeners or intervals.
 - Use `this.register*` helpers for everything that needs cleanup.
+- Omit needless words when writing prose (for example, when writing READMEs, bug reports, plan files, UI copy, code comments, commit messages, and so on).
+- When writing plan files, only include information relevant to executing the plan. You may include a very short motivation section. Do not include needless details, such as details of previous conversations with agents, dropped plans, future plans, or anything else that is not immediately relevant to implementing the plan.
 
 **Don't**
 
 - Introduce network calls without an obvious user-facing reason and documentation.
 - Ship features that require cloud services without clear disclosure and explicit opt-in.
 - Store or transmit vault contents unless essential and consented.
+- Be overly verbose in your conversation with the user.
+- Be overly verbose when writing READMEs, plan files, code comments, commit messages, or UI copy.
+- Include unnecessary information in plan files.
 
 ## Common tasks
 
