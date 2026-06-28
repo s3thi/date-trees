@@ -10,16 +10,16 @@ import {
 
 import DateTreesPlugin from "../main";
 
-type PickResult =
-  | { cancelled: true }
-  | { cancelled: false; file: TFile | null };
+type PickResult<T> = { cancelled: true } | { cancelled: false; value: T };
 
 /**
- * Mark a folder as a date tree. Opens a single fuzzy-find modal listing
- * "No template" followed by every file in the vault; persists the chosen
- * entry to settings. Aborts silently if the user closes without choosing.
+ * Core: mark a folder as a date tree. Opens a single fuzzy-find modal listing
+ * "No template" followed by every markdown file in the vault; persists the
+ * chosen entry to settings. Aborts silently if the user closes without choosing.
+ *
+ * Both the right-click menu entry and the command-palette entry funnel here.
  */
-export async function markAsDateTree(
+export async function markFolderAsDateTree(
   plugin: DateTreesPlugin,
   folder: TFolder,
 ): Promise<void> {
@@ -29,7 +29,7 @@ export async function markAsDateTree(
   }
 
   const templatePath =
-    result.file === null ? "" : normalizePath(result.file.path);
+    result.value === null ? "" : normalizePath(result.value.path);
   const folderPath = normalizePath(folder.path);
 
   const isUpdate = plugin.settings.trees.some(
@@ -53,41 +53,46 @@ export async function markAsDateTree(
 }
 
 /**
- * Single fuzzy modal. First item is always "No template" (null sentinel);
- * the rest are the vault's markdown files. Resolves the pick, or a cancelled
- * result if the user closed the modal without choosing.
+ * Command-palette entry: prompt the user for a folder via the fuzzy picker,
+ * then delegate to {@link markFolderAsDateTree} for template selection and
+ * persistence. Aborts silently if the folder picker is dismissed.
  */
-class TemplatePickerModal extends FuzzySuggestModal<TFile | null> {
+export async function markFolderAsDateTreeViaPicker(
+  plugin: DateTreesPlugin,
+): Promise<void> {
+  const folderResult = await pickFolder(plugin.app);
+  if (folderResult.cancelled) {
+    return;
+  }
+  await markFolderAsDateTree(plugin, folderResult.value);
+}
+
+/**
+ * Generic base for the two pickers. Handles the selectSuggestion/onClose
+ * resolution dance so subclasses only need to supply items + item text.
+ */
+abstract class FuzzyPickModal<T> extends FuzzySuggestModal<T> {
   private resolved = false;
-  // Built once: FuzzySuggestModal calls getItems() on every keystroke, so we
-  // avoid re-scanning the vault and re-allocating the array each filter pass.
-  private readonly items: (TFile | null)[];
 
   constructor(
     app: App,
-    private readonly resolve: (result: PickResult) => void,
+    private readonly resolve: (result: PickResult<T>) => void,
   ) {
     super(app);
-    this.items = [null, ...app.vault.getMarkdownFiles()];
   }
 
-  getItems(): (TFile | null)[] {
-    return this.items;
-  }
-
-  getItemText(item: TFile | null): string {
-    return item === null ? "No template" : item.path;
-  }
+  abstract getItems(): T[];
+  abstract getItemText(item: T): string;
 
   // selectSuggestion is the single entry point Obsidian calls for any
   // successful pick (click or Enter). Settle here, before super closes the
   // modal, so onClose sees `resolved === true` synchronously.
   selectSuggestion(
-    value: FuzzyMatch<TFile | null>,
+    value: FuzzyMatch<T>,
     evt: MouseEvent | KeyboardEvent,
   ): void {
     this.resolved = true;
-    this.resolve({ cancelled: false, file: value.item });
+    this.resolve({ cancelled: false, value: value.item });
     super.selectSuggestion(value, evt);
   }
 
@@ -101,11 +106,90 @@ class TemplatePickerModal extends FuzzySuggestModal<TFile | null> {
   }
 }
 
-function pickTemplate(app: App): Promise<PickResult> {
+/**
+ * Folder picker. Items are built once by walking the vault tree from the root
+ * (FuzzySuggestModal calls getItems() on every keystroke, so we avoid
+ * re-walking the tree and re-allocating each filter pass).
+ *
+ * The root folder ("/") is intentionally included: a user may want their
+ * entire vault treated as a date tree.
+ */
+class FolderPickerModal extends FuzzyPickModal<TFolder> {
+  private readonly items: TFolder[];
+
+  constructor(
+    app: App,
+    resolve: (result: PickResult<TFolder>) => void,
+  ) {
+    super(app, resolve);
+    this.items = collectFolders(app.vault.getRoot());
+  }
+
+  getItems(): TFolder[] {
+    return this.items;
+  }
+
+  getItemText(folder: TFolder): string {
+    return folder.isRoot() ? "/" : folder.path;
+  }
+}
+
+/**
+ * Template picker. First item is always "No template" (null sentinel); the
+ * rest are the vault's markdown files. Resolves the pick, or a cancelled
+ * result if the user closed the modal without choosing.
+ */
+class TemplatePickerModal extends FuzzyPickModal<TFile | null> {
+  // Built once (see FolderPickerModal for the same rationale).
+  private readonly items: (TFile | null)[];
+
+  constructor(
+    app: App,
+    resolve: (result: PickResult<TFile | null>) => void,
+  ) {
+    super(app, resolve);
+    this.items = [null, ...app.vault.getMarkdownFiles()];
+  }
+
+  getItems(): (TFile | null)[] {
+    return this.items;
+  }
+
+  getItemText(item: TFile | null): string {
+    return item === null ? "No template" : item.path;
+  }
+}
+
+function pickFolder(app: App): Promise<PickResult<TFolder>> {
+  return new Promise((resolve) => {
+    const modal = new FolderPickerModal(app, resolve);
+    modal.setPlaceholder("Pick a folder…");
+    modal.titleEl.setText("Select folder");
+    modal.open();
+  });
+}
+
+function pickTemplate(app: App): Promise<PickResult<TFile | null>> {
   return new Promise((resolve) => {
     const modal = new TemplatePickerModal(app, resolve);
     modal.setPlaceholder("Pick a template file (or choose no template)…");
     modal.titleEl.setText("Select template");
     modal.open();
   });
+}
+
+/** Recursively collect every TFolder under `root` (inclusive of `root`). */
+function collectFolders(root: TFolder): TFolder[] {
+  const out: TFolder[] = [root];
+  const stack: TFolder[] = [root];
+  while (stack.length > 0) {
+    const folder = stack.pop()!;
+    for (const child of folder.children) {
+      if (child instanceof TFolder) {
+        out.push(child);
+        stack.push(child);
+      }
+    }
+  }
+  return out;
 }

@@ -1,7 +1,6 @@
 import {
   App,
   PluginSettingTab,
-  Setting,
   SettingGroup,
   normalizePath,
 } from "obsidian";

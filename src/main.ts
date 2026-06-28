@@ -1,6 +1,9 @@
 import { Plugin, TFolder } from "obsidian";
 
-import { markAsDateTree } from "./commands/markDateTree";
+import {
+  markFolderAsDateTree,
+  markFolderAsDateTreeViaPicker,
+} from "./commands/markDateTree";
 import {
   DateTreesSettings,
   DateTreesSettingTab,
@@ -24,11 +27,19 @@ export default class DateTreesPlugin extends Plugin {
         menu.addItem((item) => {
           item.setTitle("Mark as date tree");
           item.onClick(() => {
-            void markAsDateTree(this, file);
+            void markFolderAsDateTree(this, file);
           });
         });
       }),
     );
+
+    this.addCommand({
+      id: "mark-folder-as-date-tree",
+      name: "Mark folder as date tree",
+      callback: () => {
+        void markFolderAsDateTreeViaPicker(this);
+      },
+    });
   }
 
   onunload() {}
