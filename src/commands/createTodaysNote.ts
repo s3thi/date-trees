@@ -1,6 +1,7 @@
 import { Notice, TFile, TFolder, Vault } from "obsidian";
 
 import { buildDayPath } from "../core/dateTreePath";
+import { expandTemplate } from "../core/template";
 import type DateTreesPlugin from "../main";
 import type { DateTreeEntry } from "../types";
 import { openFileInTab } from "../ui/openFile";
@@ -16,8 +17,10 @@ import { pick } from "../ui/picker";
  * - Picker dismissed → abort silently.
  * - File already exists → no creation, just open it.
  *
- * Template handling is intentionally not implemented yet; new day files are
- * created empty.
+ * When the date tree has a configured `templatePath`, the template is expanded
+ * (see {@link expandTemplate}) and used as the new note's initial content. If
+ * the template file is missing, a notice is shown and an empty note is
+ * created as a fallback.
  */
 export async function createTodaysNote(plugin: DateTreesPlugin): Promise<void> {
   if (plugin.settings.trees.length === 0) {
@@ -61,7 +64,18 @@ export async function createTodaysNote(plugin: DateTreesPlugin): Promise<void> {
     return;
   }
 
-  const file = await vault.create(dayFilePath, "");
+  let content = "";
+  if (entry.templatePath) {
+    try {
+      content = await expandTemplate(plugin, entry.templatePath, dayFilePath);
+    } catch {
+      new Notice(
+        `Template file not found: ${entry.templatePath}. Created empty note.`,
+      );
+    }
+  }
+
+  const file = await vault.create(dayFilePath, content);
   await openFileInTab(plugin.app.workspace, file);
 }
 
