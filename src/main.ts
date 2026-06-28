@@ -8,6 +8,7 @@ import {
   unmarkFolderAsDateTree,
   unmarkFolderAsDateTreeViaPicker,
 } from "./commands/unmarkDateTree";
+import { createTodaysNote } from "./commands/createTodaysNote";
 import { isDateTree } from "./core/dateTrees";
 import {
   DateTreesSettingTab,
@@ -63,6 +64,14 @@ export default class DateTreesPlugin extends Plugin {
       name: "Unmark folder as date tree",
       callback: () => {
         void unmarkFolderAsDateTreeViaPicker(this);
+      },
+    });
+
+    this.addCommand({
+      id: "create-todays-note",
+      name: "Today's note in date tree",
+      callback: () => {
+        void createTodaysNote(this);
       },
     });
   }
