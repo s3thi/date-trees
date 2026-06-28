@@ -20,6 +20,8 @@ export async function createTodaysNote(plugin: DateTreesPlugin): Promise<void> {
 
   let entry: DateTreeEntry;
   if (plugin.settings.trees.length === 1) {
+    // If there's only one date tree configured, we want to just create the note
+    // without prompting the user.
     entry = plugin.settings.trees[0]!;
   } else {
     const result = await pick(

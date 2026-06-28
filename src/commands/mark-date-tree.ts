@@ -13,7 +13,7 @@ async function markFolderAsDateTree(
 ): Promise<void> {
   // If `folder.name` is empty (which it might be if the entire vault is marked
   // as a date tree), then set `folderName` to `/` for the picker. Otherwise
-  // just use the existing name.
+  // just use the existing name. This is for display only.
   const folderName = folder.name || "/";
 
   // Pick a template for this folder.

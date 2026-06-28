@@ -10,11 +10,8 @@ interface DayPath {
 }
 
 /**
- * Resolve the `Intl` locale string for a `DateTreeLocale`. "english" is pinned
- * to `en-US`; "system" defers to the runtime default locale (the OS locale
- * under Obsidian's Electron). Only the *language* of the month/weekday names is
- * affected — the calendar and numbering system are forced separately (see
- * `getFormatters`) so the numeric prefix never inherits the locale's defaults.
+ * Get the locale based on the locale setting the user has picked. The locale
+ * only affects the names of weekdays and month.
  */
 function intlLocale(locale: DateTreeLocale): string | undefined {
   return locale === "english" ? "en-US" : undefined;
