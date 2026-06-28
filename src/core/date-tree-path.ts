@@ -1,8 +1,9 @@
 import { normalizePath } from "obsidian";
 
-import type { DateTreeLocale } from "../types";
+import type DateTreesPlugin from "../main";
+import type { DateTreeEntry, DateTreeLocale } from "../types";
 
-export interface DayPath {
+interface DayPath {
   yearFolderPath: string;
   monthFolderPath: string;
   dayFilePath: string;
@@ -68,7 +69,10 @@ function getFormatters(locale: DateTreeLocale): DayFormatters {
   return formatters;
 }
 
-function part(parts: Intl.DateTimeFormatPart[], type: Intl.DateTimeFormatPartTypes): string {
+function part(
+  parts: Intl.DateTimeFormatPart[],
+  type: Intl.DateTimeFormatPartTypes,
+): string {
   const value = parts.find((p) => p.type === type)?.value;
   if (value === undefined) {
     throw new Error(`Intl.DateTimeFormat did not produce a "${type}" part`);
@@ -87,7 +91,7 @@ function part(parts: Intl.DateTimeFormatPart[], type: Intl.DateTimeFormatPartTyp
  * `rootFolder` may be the vault root (`"/"` or `""`), in which case year/month
  * folders are created at the top level of the vault.
  */
-export function buildDayPath(
+function buildDayPath(
   rootFolder: string,
   date: Date,
   locale: DateTreeLocale,
@@ -115,3 +119,31 @@ export function buildDayPath(
 
   return { yearFolderPath, monthFolderPath, dayFilePath };
 }
+
+/**
+ * Finds the date tree containing `path` (the path itself or its nearest
+ * marked ancestor). Returns null when `path` is not inside any date tree.
+ */
+function findNearestDateTree(
+  plugin: DateTreesPlugin,
+  pathRaw: string,
+): DateTreeEntry | null {
+  let current = normalizePath(pathRaw);
+
+  while (current && current !== "/") {
+    const entry = plugin.settings.trees.find((t) => t.folderPath === current);
+    if (entry) {
+      return entry;
+    }
+
+    const slash = current.lastIndexOf("/");
+    if (slash === -1) {
+      break;
+    }
+    current = current.slice(0, slash);
+  }
+
+  return null;
+}
+
+export { type DayPath, buildDayPath, findNearestDateTree };

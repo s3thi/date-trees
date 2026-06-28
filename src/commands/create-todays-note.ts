@@ -39,6 +39,17 @@ export async function createTodaysNote(plugin: DateTreesPlugin): Promise<void> {
     entry = result.value;
   }
 
+  await createTodaysNoteInTree(plugin, entry);
+}
+
+/**
+ * Ensures today's day file exists in the given date tree (creating any missing
+ * year/month folders along the way) and opens it.
+ */
+export async function createTodaysNoteInTree(
+  plugin: DateTreesPlugin,
+  entry: DateTreeEntry,
+): Promise<void> {
   const { yearFolderPath, monthFolderPath, dayFilePath } = buildDayPath(
     entry.folderPath,
     new Date(),
