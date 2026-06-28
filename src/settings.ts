@@ -100,21 +100,23 @@ export class DateTreesSettingTab extends PluginSettingTab {
     }
 
     for (const entry of this.plugin.settings.trees) {
-      new Setting(containerEl)
-        .setName(entry.folderPath)
-        .setDesc(`Template: ${entry.templatePath || "(none)"}`)
-        .addExtraButton((btn) =>
-          btn
-            .setIcon("trash")
-            .setTooltip("Remove")
-            .onClick(async () => {
-              this.plugin.settings.trees = this.plugin.settings.trees.filter(
-                (t) => t.folderPath !== entry.folderPath,
-              );
-              await this.plugin.saveSettings();
-              this.rerender();
-            }),
-        );
+      foldersSettingGroup.addSetting((setting) => {
+        setting
+          .setName(entry.folderPath)
+          .setDesc(`Template: ${entry.templatePath || "(none)"}`)
+          .addExtraButton((btn) =>
+            btn
+              .setIcon("trash")
+              .setTooltip("Remove")
+              .onClick(async () => {
+                this.plugin.settings.trees = this.plugin.settings.trees.filter(
+                  (t) => t.folderPath !== entry.folderPath,
+                );
+                await this.plugin.saveSettings();
+                this.rerender();
+              }),
+          );
+      });
     }
   }
 
