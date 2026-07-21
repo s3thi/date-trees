@@ -2,9 +2,10 @@ import { App, FuzzyMatch, FuzzySuggestModal } from "obsidian";
 
 type PickResult<T> = { wasCancelled: true } | { wasCancelled: false; value: T };
 
-interface PickOptions {
+interface PickOptions<T> {
   placeholder: string;
   title: string;
+  errors?: (item: T) => string[];
 }
 
 /**
@@ -21,6 +22,7 @@ class FuzzyPickModal<T> extends FuzzySuggestModal<T> {
     private readonly items: T[],
     private readonly itemText: (item: T) => string,
     private readonly resolve: (result: PickResult<T>) => void,
+    private readonly errors?: (item: T) => string[],
   ) {
     super(app);
   }
@@ -31,6 +33,13 @@ class FuzzyPickModal<T> extends FuzzySuggestModal<T> {
 
   getItemText(item: T): string {
     return this.itemText(item);
+  }
+
+  renderSuggestion(value: FuzzyMatch<T>, el: HTMLElement): void {
+    super.renderSuggestion(value, el.createDiv());
+    for (const error of this.errors?.(value.item) ?? []) {
+      el.createDiv({ cls: "date-trees-error", text: error });
+    }
   }
 
   // selectSuggestion is the single entry point Obsidian calls for any
@@ -60,10 +69,10 @@ function pick<T>(
   app: App,
   items: T[],
   itemText: (item: T) => string,
-  opts: PickOptions,
+  opts: PickOptions<T>,
 ): Promise<PickResult<T>> {
   return new Promise((resolve) => {
-    const modal = new FuzzyPickModal(app, items, itemText, resolve);
+    const modal = new FuzzyPickModal(app, items, itemText, resolve, opts.errors);
     modal.setPlaceholder(opts.placeholder);
     modal.titleEl.setText(opts.title);
     modal.open();

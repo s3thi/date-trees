@@ -3,6 +3,7 @@ import { App, PluginSettingTab, SettingGroup } from "obsidian";
 import type DateTreesPlugin from "../main";
 import { type DateTreeLocale } from "../types";
 import { unmarkDateTree } from "../core/settings";
+import { collectDateTreeErrors } from "../core/validators";
 
 class DateTreesSettingTab extends PluginSettingTab {
   plugin: DateTreesPlugin;
@@ -73,9 +74,16 @@ class DateTreesSettingTab extends PluginSettingTab {
 
     for (const entry of this.plugin.settings.trees) {
       foldersSettingGroup.addSetting((setting) => {
+        const description = createFragment();
+        description.createDiv({
+          text: `Template: ${entry.templatePath || "(none)"}`,
+        });
+        for (const error of collectDateTreeErrors(this.app.vault, entry)) {
+          description.createDiv({ cls: "date-trees-error", text: error });
+        }
         setting
           .setName(entry.folderPath)
-          .setDesc(`Template: ${entry.templatePath || "(none)"}`)
+          .setDesc(description)
           .addExtraButton((btn) =>
             btn
               .setIcon("trash")

@@ -1,6 +1,6 @@
-import { TFile } from "obsidian";
-
 import type DateTreesPlugin from "../main";
+import { extractErrorMessage } from "./errors";
+import { validateTemplateFile } from "./validators";
 
 /**
  * Expand a template file into note content.
@@ -18,25 +18,45 @@ import type DateTreesPlugin from "../main";
  * plugin expansion (full `<% %>` syntax, prompts, includes) when it is
  * installed and enabled. That path is intentionally deferred for now.
  *
- * @throws when `templatePath` does not resolve to an existing markdown file.
+ * @throws with the path and reason when validation, reading, or expansion fails.
  */
-export async function expandTemplate(
+async function expandTemplate(
   plugin: DateTreesPlugin,
   templatePath: string,
   targetPath: string,
 ): Promise<string> {
   const { vault } = plugin.app;
 
-  const templateFile = vault.getAbstractFileByPath(templatePath);
-  if (!(templateFile instanceof TFile)) {
-    throw new Error(`Template file not found: ${templatePath}`);
-  }
-  if (templateFile.extension.toLowerCase() !== "md") {
-    throw new Error(`Template is not a Markdown file: ${templatePath}`);
+  const result = validateTemplateFile(vault, templatePath);
+  if (result.error !== null) {
+    throw new Error(result.error);
   }
 
-  const raw = await vault.cachedRead(templateFile);
+  let raw: string;
+  try {
+    raw = await vault.cachedRead(result.file);
+  } catch (error: unknown) {
+    throw Object.assign(
+      new Error(
+        `Could not read template: ${templatePath}\n${extractErrorMessage(error)}`,
+      ),
+      { cause: error },
+    );
+  }
 
+  try {
+    return expandTokens(raw, targetPath);
+  } catch (error: unknown) {
+    throw Object.assign(
+      new Error(
+        `Could not expand template: ${templatePath}\n${extractErrorMessage(error)}`,
+      ),
+      { cause: error },
+    );
+  }
+}
+
+function expandTokens(raw: string, targetPath: string): string {
   const title = (targetPath.split("/").pop() ?? targetPath).replace(
     /\.md$/u,
     "",
@@ -54,3 +74,5 @@ export async function expandTemplate(
     )
     .replace(/\{\{\s*time\s*\}\}/gu, () => now.format("HH:mm"));
 }
+
+export { expandTemplate };

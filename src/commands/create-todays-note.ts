@@ -2,11 +2,12 @@ import { Notice, TFile, TFolder, Vault } from "obsidian";
 
 import { buildDayPath } from "../core/date-tree-path";
 import { expandTemplate } from "../core/template";
-import { validateDateTree } from "../core/validate-date-trees";
+import { extractErrorMessage } from "../core/errors";
 import type DateTreesPlugin from "../main";
 import type { DateTreeEntry } from "../types";
 import { openFileInTab } from "../ui/open-file";
 import { pick } from "../ui/picker";
+import { collectDateTreeErrors, validateDateTree } from "../core/validators";
 
 /**
  * Allows the user to pick a configured date tree, then ensure today's day file
@@ -27,16 +28,16 @@ export async function createTodaysNote(plugin: DateTreesPlugin): Promise<void> {
   } else {
     const choices = plugin.settings.trees.map((entry) => ({
       entry,
-      error: validateDateTree(plugin.app.vault, entry),
+      errors: collectDateTreeErrors(plugin.app.vault, entry),
     }));
     const result = await pick(
       plugin.app,
       choices,
-      ({ entry, error }) =>
-        error ? `${entry.folderPath} (unavailable)` : entry.folderPath,
+      ({ entry }) => entry.folderPath,
       {
         placeholder: "Pick a date tree…",
         title: "Today's note in date tree",
+        errors: ({ errors }) => errors,
       },
     );
 
@@ -86,17 +87,19 @@ export async function createTodaysNoteInTree(
   }
 
   let content = "";
+  let templateError: string | null = null;
   if (entry.templatePath) {
     try {
       content = await expandTemplate(plugin, entry.templatePath, dayFilePath);
-    } catch {
-      new Notice(
-        `Could not use template: ${entry.templatePath}. Created empty note.`,
-      );
+    } catch (error: unknown) {
+      templateError = extractErrorMessage(error);
     }
   }
 
   const file = await vault.create(dayFilePath, content);
+  if (templateError) {
+    new Notice(`${templateError}\nCreated an empty note.`);
+  }
   await openFileInTab(plugin.app.workspace, file);
 }
 
