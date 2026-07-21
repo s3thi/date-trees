@@ -9,6 +9,7 @@ import {
   findNearestDateTree,
   treeDisplayName,
 } from "../core/date-tree-path";
+import { runCommand } from "./run-command";
 
 function registerContextMenus(plugin: DateTreesPlugin) {
   // Add a right-click menu to the file explorer to configure date-trees.
@@ -22,7 +23,7 @@ function registerContextMenus(plugin: DateTreesPlugin) {
         menu.addItem((item) => {
           item.setTitle(`Open today's note in "${treeName}"`);
           item.onClick(() => {
-            void createTodaysNoteInTree(plugin, tree);
+            runCommand(() => createTodaysNoteInTree(plugin, tree));
           });
         });
       }
@@ -37,7 +38,7 @@ function registerContextMenus(plugin: DateTreesPlugin) {
         menu.addItem((item) => {
           item.setTitle(`Unmark as date tree`);
           item.onClick(() => {
-            void unmarkFolderAsDateTree(plugin, file);
+            runCommand(() => unmarkFolderAsDateTree(plugin, file));
           });
         });
       } else {
@@ -45,7 +46,7 @@ function registerContextMenus(plugin: DateTreesPlugin) {
         menu.addItem((item) => {
           item.setTitle("Mark as date tree…");
           item.onClick(() => {
-            void markFolderAsDateTree(plugin, file);
+            runCommand(() => markFolderAsDateTree(plugin, file));
           });
         });
       }

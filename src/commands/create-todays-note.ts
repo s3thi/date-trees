@@ -89,8 +89,14 @@ export async function createTodaysNoteInTree(
  * exists.
  */
 async function ensureFolder(vault: Vault, path: string): Promise<void> {
-  if (vault.getAbstractFileByPath(path) instanceof TFolder) {
+  const existing = vault.getAbstractFileByPath(path);
+  if (existing instanceof TFolder) {
     return;
+  }
+  if (existing) {
+    throw new Error(
+      `Cannot create folder "${path}" because a file already exists there.`,
+    );
   }
   await vault.createFolder(path);
 }
