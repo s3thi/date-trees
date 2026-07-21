@@ -23,7 +23,7 @@ import type DateTreesPlugin from "../main";
 export async function expandTemplate(
   plugin: DateTreesPlugin,
   templatePath: string,
-  targetFileName: string,
+  targetPath: string,
 ): Promise<string> {
   const { vault } = plugin.app;
 
@@ -34,7 +34,10 @@ export async function expandTemplate(
 
   const raw = await vault.cachedRead(templateFile);
 
-  const title = targetFileName.replace(/\.md$/u, "");
+  const title = (targetPath.split("/").pop() ?? targetPath).replace(
+    /\.md$/u,
+    "",
+  );
   const now = window.moment();
 
   return raw
