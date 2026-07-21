@@ -31,6 +31,9 @@ export async function expandTemplate(
   if (!(templateFile instanceof TFile)) {
     throw new Error(`Template file not found: ${templatePath}`);
   }
+  if (templateFile.extension.toLowerCase() !== "md") {
+    throw new Error(`Template is not a Markdown file: ${templatePath}`);
+  }
 
   const raw = await vault.cachedRead(templateFile);
 

@@ -2,6 +2,7 @@ import { Notice, TFile, TFolder, Vault } from "obsidian";
 
 import { buildDayPath } from "../core/date-tree-path";
 import { expandTemplate } from "../core/template";
+import { validateDateTree } from "../core/validate-date-trees";
 import type DateTreesPlugin from "../main";
 import type { DateTreeEntry } from "../types";
 import { openFileInTab } from "../ui/open-file";
@@ -24,10 +25,15 @@ export async function createTodaysNote(plugin: DateTreesPlugin): Promise<void> {
     // without prompting the user.
     entry = plugin.settings.trees[0]!;
   } else {
+    const choices = plugin.settings.trees.map((entry) => ({
+      entry,
+      error: validateDateTree(plugin.app.vault, entry),
+    }));
     const result = await pick(
       plugin.app,
-      plugin.settings.trees,
-      (entry) => entry.folderPath,
+      choices,
+      ({ entry, error }) =>
+        error ? `${entry.folderPath} (unavailable)` : entry.folderPath,
       {
         placeholder: "Pick a date tree…",
         title: "Today's note in date tree",
@@ -38,7 +44,7 @@ export async function createTodaysNote(plugin: DateTreesPlugin): Promise<void> {
       return;
     }
 
-    entry = result.value;
+    entry = result.value.entry;
   }
 
   await createTodaysNoteInTree(plugin, entry);
@@ -52,13 +58,23 @@ export async function createTodaysNoteInTree(
   plugin: DateTreesPlugin,
   entry: DateTreeEntry,
 ): Promise<void> {
+  if (!plugin.settings.trees.includes(entry)) {
+    new Notice(`Date tree is no longer configured: ${entry.folderPath}`);
+    return;
+  }
+
+  const { vault } = plugin.app;
+  const error = validateDateTree(vault, entry);
+  if (error) {
+    new Notice(error);
+    return;
+  }
+
   const { yearFolderPath, monthFolderPath, dayFilePath } = buildDayPath(
     entry.folderPath,
     new Date(),
     plugin.settings.locale,
   );
-
-  const { vault } = plugin.app;
 
   await ensureFolder(vault, yearFolderPath);
   await ensureFolder(vault, monthFolderPath);
@@ -75,7 +91,7 @@ export async function createTodaysNoteInTree(
       content = await expandTemplate(plugin, entry.templatePath, dayFilePath);
     } catch {
       new Notice(
-        `Template file not found: ${entry.templatePath}. Created empty note.`,
+        `Could not use template: ${entry.templatePath}. Created empty note.`,
       );
     }
   }
