@@ -13,6 +13,43 @@ function registerDateTreeEvents(plugin: DateTreesPlugin): void {
       );
     }),
   );
+  plugin.registerEvent(
+    plugin.app.vault.on("delete", (file) => {
+      void updateConfiguredPathsAfterDelete(plugin, file.path).catch(
+        (error: unknown) => {
+          console.error("Date trees: could not save deleted paths", error);
+        },
+      );
+    }),
+  );
+}
+
+/** Remove deleted trees and clear deleted templates in surviving trees. */
+async function updateConfiguredPathsAfterDelete(
+  plugin: DateTreesPlugin,
+  deletedPathRaw: string,
+): Promise<void> {
+  const deletedPath = normalizePath(deletedPathRaw);
+  let changed = false;
+
+  const survivingTrees = plugin.settings.trees.filter((tree) => {
+    if (matchesPathPrefix(tree.folderPath, deletedPath)) {
+      changed = true;
+      return false;
+    }
+
+    if (tree.templatePath && matchesPathPrefix(tree.templatePath, deletedPath)) {
+      tree.templatePath = "";
+      changed = true;
+    }
+
+    return true;
+  });
+
+  if (changed) {
+    plugin.settings.trees = survivingTrees;
+    await plugin.saveSettings();
+  }
 }
 
 /**
@@ -83,10 +120,14 @@ function replacePathPrefix(
   oldPath: string,
   newPath: string,
 ): string {
-  if (stored === oldPath || stored.startsWith(oldPath + "/")) {
+  if (matchesPathPrefix(stored, oldPath)) {
     return newPath + stored.slice(oldPath.length);
   }
   return stored;
+}
+
+function matchesPathPrefix(stored: string, path: string): boolean {
+  return stored === path || stored.startsWith(path + "/");
 }
 
 export { registerDateTreeEvents };
