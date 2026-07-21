@@ -5,7 +5,10 @@ import { createTodaysNoteInTree } from "../commands/create-todays-note";
 import { markFolderAsDateTree } from "../commands/mark-date-tree";
 import { unmarkFolderAsDateTree } from "../commands/unmark-date-tree";
 import { isDateTree } from "../core/settings";
-import { findNearestDateTree } from "../core/date-tree-path";
+import {
+  findNearestDateTree,
+  treeDisplayName,
+} from "../core/date-tree-path";
 
 function registerContextMenus(plugin: DateTreesPlugin) {
   // Add a right-click menu to the file explorer to configure date-trees.
@@ -15,7 +18,7 @@ function registerContextMenus(plugin: DateTreesPlugin) {
       // folder inside it.
       const tree = findNearestDateTree(plugin, file.path);
       if (tree) {
-        const treeName = tree.folderPath.split("/").pop() ?? tree.folderPath;
+        const treeName = treeDisplayName(tree.folderPath);
         menu.addItem((item) => {
           item.setTitle(`Open today's note in "${treeName}"`);
           item.onClick(() => {

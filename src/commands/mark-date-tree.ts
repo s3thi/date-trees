@@ -3,6 +3,7 @@ import { Notice, TFile, TFolder } from "obsidian";
 import type DateTreesPlugin from "../main";
 import { pick } from "../ui/picker";
 import { markOrUpdateDateTree } from "../core/settings";
+import { treeDisplayName } from "../core/date-tree-path";
 
 /**
  * Marks the folder passed in as argument as a date tree.
@@ -11,10 +12,7 @@ async function markFolderAsDateTree(
   plugin: DateTreesPlugin,
   folder: TFolder,
 ): Promise<void> {
-  // If `folder.name` is empty (which it might be if the entire vault is marked
-  // as a date tree), then set `folderName` to `/` for the picker. Otherwise
-  // just use the existing name. This is for display only.
-  const folderName = folder.name || "/";
+  const folderName = treeDisplayName(folder.path);
 
   // Pick a template for this folder.
   const result = await pick<TFile | null>(

@@ -117,6 +117,11 @@ function buildDayPath(
   return { yearFolderPath, monthFolderPath, dayFilePath };
 }
 
+/** Short display name for a date tree folder path. */
+function treeDisplayName(folderPath: string): string {
+  return folderPath === "/" ? "/" : folderPath.split("/").pop() || folderPath;
+}
+
 /**
  * Finds the date tree containing `path` (the path itself or its nearest
  * marked ancestor). Returns null when `path` is not inside any date tree.
@@ -127,20 +132,19 @@ function findNearestDateTree(
 ): DateTreeEntry | null {
   let current = normalizePath(pathRaw);
 
-  while (current && current !== "/") {
+  for (;;) {
     const entry = plugin.settings.trees.find((t) => t.folderPath === current);
     if (entry) {
       return entry;
     }
 
-    const slash = current.lastIndexOf("/");
-    if (slash === -1) {
-      break;
+    if (current === "/") {
+      return null;
     }
-    current = current.slice(0, slash);
-  }
 
-  return null;
+    const slash = current.lastIndexOf("/");
+    current = slash === -1 ? "/" : current.slice(0, slash);
+  }
 }
 
-export { type DayPath, buildDayPath, findNearestDateTree };
+export { type DayPath, buildDayPath, findNearestDateTree, treeDisplayName };
