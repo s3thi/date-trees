@@ -24,7 +24,7 @@ interface DayFormatters {
   names: Intl.DateTimeFormat;
 }
 
-const formatterCache = new Map<string, DayFormatters>();
+const formatterCache = new Map<DateTreeLocale, DayFormatters>();
 
 /**
  * Build (and memoize) the two formatters used for a locale. Two formatters are
@@ -43,8 +43,7 @@ const formatterCache = new Map<string, DayFormatters>();
  * feature "system" exists to provide.
  */
 function getFormatters(locale: DateTreeLocale): DayFormatters {
-  const key = intlLocale(locale) ?? "default";
-  let formatters = formatterCache.get(key);
+  let formatters = formatterCache.get(locale);
   if (formatters === undefined) {
     const tag = intlLocale(locale);
     formatters = {
@@ -61,7 +60,7 @@ function getFormatters(locale: DateTreeLocale): DayFormatters {
         calendar: "gregory",
       }),
     };
-    formatterCache.set(key, formatters);
+    formatterCache.set(locale, formatters);
   }
   return formatters;
 }
