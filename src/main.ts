@@ -1,5 +1,6 @@
 import { Plugin } from "obsidian";
 
+import { registerDateTreeEvents } from "./core/date-tree-events";
 import { normalizeSettings } from "./core/settings";
 import { DEFAULT_SETTINGS, type DateTreesSettings } from "./types";
 import { registerContextMenus } from "./ui/register-context-menus";
@@ -11,6 +12,7 @@ export default class DateTreesPlugin extends Plugin {
 
   async onload() {
     await this.loadSettings();
+    registerDateTreeEvents(this);
     this.addSettingTab(new DateTreesSettingTab(this.app, this));
     registerContextMenus(this);
     registerCommands(this);
