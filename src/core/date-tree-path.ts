@@ -1,13 +1,7 @@
 import { normalizePath } from "obsidian";
 
 import type DateTreesPlugin from "../main";
-import type { DateTreeEntry, DateTreeLocale } from "../types";
-
-interface DayPath {
-  yearFolderPath: string;
-  monthFolderPath: string;
-  dayFilePath: string;
-}
+import type { DateTreeEntry, DateTreeLocale, DayPath } from "../types";
 
 /**
  * Get the locale based on the locale setting the user has picked. The locale
@@ -146,4 +140,4 @@ function findNearestDateTree(
   }
 }
 
-export { type DayPath, buildDayPath, findNearestDateTree, treeDisplayName };
+export { buildDayPath, findNearestDateTree, treeDisplayName };

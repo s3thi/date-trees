@@ -46,11 +46,8 @@ async function markFolderAsDateTree(
 /**
  * Marks a folder as a date tree by allowing the user to select it using a fuzzy
  * picker.
- *
- * Delegates to {@link markFolderAsDateTree} for template selection and
- * persistence.
  */
-async function markFolderAsDateTreeViaPicker(
+async function pickFolderAndMarkAsDateTree(
   plugin: DateTreesPlugin,
 ): Promise<void> {
   const folderResult = await pick<TFolder>(
@@ -90,4 +87,4 @@ function collectFolders(root: TFolder): TFolder[] {
   return out;
 }
 
-export { markFolderAsDateTree, markFolderAsDateTreeViaPicker };
+export { markFolderAsDateTree, pickFolderAndMarkAsDateTree };

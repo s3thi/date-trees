@@ -14,7 +14,9 @@ import { collectDateTreeErrors, validateDateTree } from "../core/validators";
  * exists inside it (creating any missing year/month folders along the way), and
  * finally opens the file.
  */
-export async function createTodaysNote(plugin: DateTreesPlugin): Promise<void> {
+async function pickDateTreeAndCreateTodaysNote(
+  plugin: DateTreesPlugin,
+): Promise<void> {
   if (plugin.settings.trees.length === 0) {
     new Notice("No date trees configured.");
     return;
@@ -77,8 +79,8 @@ export async function createTodaysNoteInTree(
     plugin.settings.locale,
   );
 
-  await ensureFolder(vault, yearFolderPath);
-  await ensureFolder(vault, monthFolderPath);
+  await createFolder(vault, yearFolderPath);
+  await createFolder(vault, monthFolderPath);
 
   const existing = vault.getAbstractFileByPath(dayFilePath);
   if (existing instanceof TFile) {
@@ -107,7 +109,7 @@ export async function createTodaysNoteInTree(
  * Creates `path` as a folder if it doesn't already exist. No-op when folder
  * exists.
  */
-async function ensureFolder(vault: Vault, path: string): Promise<void> {
+async function createFolder(vault: Vault, path: string): Promise<void> {
   const existing = vault.getAbstractFileByPath(path);
   if (existing instanceof TFolder) {
     return;
@@ -119,3 +121,5 @@ async function ensureFolder(vault: Vault, path: string): Promise<void> {
   }
   await vault.createFolder(path);
 }
+
+export { pickDateTreeAndCreateTodaysNote };

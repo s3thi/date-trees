@@ -20,7 +20,7 @@ async function unmarkDateTreeAndNotify(
 }
 
 /**
- * Unmarks a folder as date tree. Mirrors {@link markFolderAsDateTree}.
+ * Unmarks a folder as date tree.
  */
 async function unmarkFolderAsDateTree(
   plugin: DateTreesPlugin,
@@ -33,7 +33,7 @@ async function unmarkFolderAsDateTree(
  * Prompts the user for a configured date tree via the fuzzy picker, then
  * unmarks it.
  */
-async function unmarkFolderAsDateTreeViaPicker(
+async function pickFolderAndUnmarkAsDateTree(
   plugin: DateTreesPlugin,
 ): Promise<void> {
   if (plugin.settings.trees.length === 0) {
@@ -58,4 +58,4 @@ async function unmarkFolderAsDateTreeViaPicker(
   await unmarkDateTreeAndNotify(plugin, result.value.folderPath);
 }
 
-export { unmarkFolderAsDateTree, unmarkFolderAsDateTreeViaPicker };
+export { unmarkFolderAsDateTree, pickFolderAndUnmarkAsDateTree };
