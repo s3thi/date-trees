@@ -2,12 +2,6 @@
 
 Obsidian community plugin: TypeScript in `src/` bundled by esbuild to `main.js` at the repo root.
 
-## Version control: Jujutsu (`jj`), never Git
-
-This repo uses `jj`. **Never run `git` commands, not even read-only ones** (`git status`, `git log`, `git diff`). A `.git` directory exists only as jj's storage backend.
-
-Use the `jj` equivalents: `jj status`, `jj log`, `jj diff`, `jj describe`/`jj commit`, `jj bookmark`. Look up flags in the [CLI reference](https://www.jj-vcs.dev/latest/cli-reference/) instead of guessing. If something seems to require Git, stop and use jj or ask.
-
 ## Commands
 
 - `pnpm install` — install deps (pnpm required).

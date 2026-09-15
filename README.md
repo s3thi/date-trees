@@ -27,23 +27,27 @@ Month and weekday names follow the configured locale. **English** uses US Englis
 
 ## Releasing
 
-Use pnpm to bump versions and jj to record and tag the release. Replace `1.1.0` below with the release version, without a leading `v`.
+Use pnpm to bump versions and Git to commit and tag the release. Start with a clean working tree on `main`. Replace `1.1.0` below with the release version, without a leading `v`.
 
 ```sh
-pnpm version 1.1.0 --no-git-tag-version --no-git-checks
+git switch main
+git status
+pnpm version 1.1.0 --no-git-tag-version
 pnpm run lint
 pnpm run build
-jj diff
+git diff
 ```
 
-Both version flags are required to disable pnpm's Git checks, commits, and tags. The version script updates `manifest.json` and adds the minimum Obsidian version to `versions.json`. Review the diff: `package.json` and `manifest.json` must match the release version, and `versions.json` must map it to `manifest.json`'s `minAppVersion`.
+The flag prevents an automatic commit and tag so you can review and build first. The version script updates `manifest.json` and adds the minimum Obsidian version to `versions.json`. Review the diff: `package.json` and `manifest.json` must match the release version, and `versions.json` must map it to `manifest.json`'s `minAppVersion`.
 
-Record and tag the reviewed revision using [jj's release commands](https://docs.jj-vcs.dev/latest/cli-reference/):
+Commit the reviewed version files, tag the release, and push both the branch and tag:
 
 ```sh
-jj describe -m "Release 1.1.0"
-jj tag set 1.1.0 -r @
-jj git push --remote origin --tag 1.1.0
+git add package.json manifest.json versions.json
+git commit -m "Release 1.1.0"
+git tag -a 1.1.0 -m "Release 1.1.0"
+git push origin main
+git push origin tag 1.1.0
 ```
 
 Create a GitHub release for that exact tag and attach `main.js`, `manifest.json`, and `styles.css`. Keep generated build artifacts out of version control.
