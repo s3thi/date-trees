@@ -3,7 +3,11 @@ import { normalizePath } from "obsidian";
 import type DateTreesPlugin from "../main";
 import type { DateTreeEntry } from "../types";
 
+/**
+ * Registers vault-wide events. Logs failures to the developer console.
+ */
 function registerDateTreeEvents(plugin: DateTreesPlugin): void {
+  // Handle file/folder rename events.
   plugin.registerEvent(
     plugin.app.vault.on("rename", (file, oldPath) => {
       void updateConfiguredPathsAfterRename(plugin, oldPath, file.path).catch(
@@ -13,6 +17,8 @@ function registerDateTreeEvents(plugin: DateTreesPlugin): void {
       );
     }),
   );
+
+  // Handle file/folder delete events.
   plugin.registerEvent(
     plugin.app.vault.on("delete", (file) => {
       void updateConfiguredPathsAfterDelete(plugin, file.path).catch(
@@ -24,7 +30,10 @@ function registerDateTreeEvents(plugin: DateTreesPlugin): void {
   );
 }
 
-/** Remove deleted trees and clear deleted templates in surviving trees. */
+/**
+ * Keeps plugin settings in sync with the vault state by handling deleted files
+ * and folders.
+ */
 async function updateConfiguredPathsAfterDelete(
   plugin: DateTreesPlugin,
   deletedPathRaw: string,
@@ -38,7 +47,10 @@ async function updateConfiguredPathsAfterDelete(
       return false;
     }
 
-    if (tree.templatePath && matchesPathPrefix(tree.templatePath, deletedPath)) {
+    if (
+      tree.templatePath &&
+      matchesPathPrefix(tree.templatePath, deletedPath)
+    ) {
       tree.templatePath = "";
       changed = true;
     }
@@ -53,8 +65,8 @@ async function updateConfiguredPathsAfterDelete(
 }
 
 /**
- * Update saved date tree folder or template file paths when they are renamed or
- * moved.
+ * Keeps plugin settings in sync with the vault state by handling renamed files
+ * and folders.
  */
 async function updateConfiguredPathsAfterRename(
   plugin: DateTreesPlugin,
@@ -126,6 +138,10 @@ function replacePathPrefix(
   return stored;
 }
 
+/**
+ * Match an exact path or a descendant at a slash boundary: "Work" matches
+ * "Work/Journal", but not "Workshop".
+ */
 function matchesPathPrefix(stored: string, path: string): boolean {
   return stored === path || stored.startsWith(path + "/");
 }

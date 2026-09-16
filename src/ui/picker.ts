@@ -1,27 +1,33 @@
 import { App, FuzzyMatch, FuzzySuggestModal } from "obsidian";
 
-type PickResult<T> = { wasCancelled: true } | { wasCancelled: false; value: T };
+/**
+ * Distinguish between the user dismissing the fuzzy picker and the user
+ * selecting a value (which may itself be `null`).
+ */
+type FuzzyPickerResult<T> =
+  { wasCancelled: true } | { wasCancelled: false; value: T };
 
-interface PickOptions<T> {
+interface FuzzyPickerOptions<T> {
   placeholder: string;
   title: string;
+
+  /**
+   * Error messages shown below each suggestion.
+   */
   errors?: (item: T) => string[];
 }
 
 /**
- * Concrete fuzzy picker over a fixed item list. Items are captured once at
- * construction (FuzzySuggestModal calls getItems() on every keystroke), so
- * callers should pass an already-built array rather than a lazily-recomputed
- * expression.
+ * A fuzzy picker that lets the user select an item from a fixed array of items.
  */
-class FuzzyPickModal<T> extends FuzzySuggestModal<T> {
+class FuzzyPicker<T> extends FuzzySuggestModal<T> {
   private resolved = false;
 
   constructor(
     app: App,
     private readonly items: T[],
     private readonly itemText: (item: T) => string,
-    private readonly resolve: (result: PickResult<T>) => void,
+    private readonly resolve: (result: FuzzyPickerResult<T>) => void,
     private readonly errors?: (item: T) => string[],
   ) {
     super(app);
@@ -35,6 +41,9 @@ class FuzzyPickModal<T> extends FuzzySuggestModal<T> {
     return this.itemText(item);
   }
 
+  /**
+   * Renders a single match with any error messages beneath it.
+   */
   renderSuggestion(value: FuzzyMatch<T>, el: HTMLElement): void {
     super.renderSuggestion(value, el.createDiv());
     for (const error of this.errors?.(value.item) ?? []) {
@@ -42,9 +51,9 @@ class FuzzyPickModal<T> extends FuzzySuggestModal<T> {
     }
   }
 
-  // selectSuggestion is the single entry point Obsidian calls for any
-  // successful pick (click or Enter). Settle here, before super closes the
-  // modal, so onClose sees `resolved === true` synchronously.
+  /*
+   * This is the function Obsidian calls for a successful pick (click or Enter).
+   */
   selectSuggestion(
     value: FuzzyMatch<T>,
     evt: MouseEvent | KeyboardEvent,
@@ -54,29 +63,41 @@ class FuzzyPickModal<T> extends FuzzySuggestModal<T> {
     super.selectSuggestion(value, evt);
   }
 
-  // Required abstract member, but selectSuggestion already did the work.
+  /*
+   * Required abstract member, but we do all the work in `selectSuggestion`.
+   */
   onChooseItem(): void {}
 
+  /*
+   * Called when all the selection callbacks have been called and the picker is
+   * finally closed.
+   */
   onClose(): void {
     super.onClose();
-    // Reached without selectSuggestion firing => dismissed (Esc / click-out).
-    if (!this.resolved) this.resolve({ wasCancelled: true });
+
+    // If we reached here without `selectSuggestion` being called first, it
+    // means the picker was dismissed.
+    if (!this.resolved) {
+      this.resolve({ wasCancelled: true });
+    }
   }
 }
 
-/** Open a fuzzy picker over `items` and resolve with the choice (or cancelled). */
+/**
+ * Open a fuzzy picker that allows the user to pick from `items`.
+ */
 function pick<T>(
   app: App,
   items: T[],
   itemText: (item: T) => string,
-  opts: PickOptions<T>,
-): Promise<PickResult<T>> {
+  opts: FuzzyPickerOptions<T>,
+): Promise<FuzzyPickerResult<T>> {
   return new Promise((resolve) => {
-    const modal = new FuzzyPickModal(app, items, itemText, resolve, opts.errors);
+    const modal = new FuzzyPicker(app, items, itemText, resolve, opts.errors);
     modal.setPlaceholder(opts.placeholder);
     modal.titleEl.setText(opts.title);
     modal.open();
   });
 }
 
-export { type PickResult, pick };
+export { pick };

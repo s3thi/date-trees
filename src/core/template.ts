@@ -56,6 +56,10 @@ async function expandTemplate(
   }
 }
 
+/**
+ * Replaces title, date, and time tokens in template text. Preserves unknown
+ * tokens as-is.
+ */
 function expandTokens(raw: string, targetPath: string): string {
   const title = (targetPath.split("/").pop() ?? targetPath).replace(
     /\.md$/u,

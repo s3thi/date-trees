@@ -4,10 +4,11 @@ import type DateTreesPlugin from "../main";
 import type { DateTreeEntry, DateTreeLocale, DayPath } from "../types";
 
 /**
- * Get the locale based on the locale setting the user has picked. The locale
- * only affects the names of weekdays and month.
+ * Gets the locale name based on the locale setting the user has picked.
  */
-function intlLocale(locale: DateTreeLocale): string | undefined {
+function dateTreeLocaleToLocaleName(
+  locale: DateTreeLocale,
+): string | undefined {
   return locale === "english" ? "en-US" : undefined;
 }
 
@@ -21,25 +22,17 @@ interface DayFormatters {
 const formatterCache = new Map<DateTreeLocale, DayFormatters>();
 
 /**
- * Build (and memoize) the two formatters used for a locale. Two formatters are
- * needed because a single `DateTimeFormat` can't emit the month as both a
- * `2-digit` number and a `long` name.
+ * Creates and cache two separate formatters: one for for numeric dates, and the
+ * other for localized month/weekday names.
  *
- * Both formatters force `calendar: "gregory"`, and the numeric one also forces
- * `numberingSystem: "latn"`. This is deliberate: the `YYYY-MM`/`YYYY-MM-DD`
- * prefix is meant to be a stable, lexically-sortable ASCII date key, so it must
- * never inherit the locale's defaults. Without this, a "system" locale whose
- * default numbering system is non-Latin (e.g. `ar` → "٢٠٢٦", `bn` → "২০২৬") or
- * whose default calendar is non-Gregorian (e.g. a Japanese-era locale → year
- * "R8" instead of "2026") would corrupt the prefix: folders stop sorting,
- * day-file lookups mismatch, and the year number itself can be wrong. Only the
- * *language* of the month/weekday names varies by locale — which is the actual
- * feature "system" exists to provide.
+ * Both formatters use the Gregorian calendar. Numeric dates use ASCII digits to
+ * keep path prefixes consistent and sortable across locales. The user's
+ * selected locale only affects month and weekday names.
  */
 function getFormatters(locale: DateTreeLocale): DayFormatters {
   let formatters = formatterCache.get(locale);
   if (formatters === undefined) {
-    const tag = intlLocale(locale);
+    const tag = dateTreeLocaleToLocaleName(locale);
     formatters = {
       numeric: new Intl.DateTimeFormat(tag, {
         year: "numeric",
@@ -59,7 +52,11 @@ function getFormatters(locale: DateTreeLocale): DayFormatters {
   return formatters;
 }
 
-function part(
+/**
+ * Extracts a required part from `Intl.DateTimeFormat.formatToParts()` output.
+ * @throws if the formatter did not produce the requested part.
+ */
+function extractDateTimeFormatPart(
   parts: Intl.DateTimeFormatPart[],
   type: Intl.DateTimeFormatPartTypes,
 ): string {
@@ -71,15 +68,8 @@ function part(
 }
 
 /**
- * Compute the date-tree layout for a single day under `rootFolder`. The numeric
- * prefix (year/month/day) is always Gregorian + Latin digits regardless of
- * locale, so it stays a stable, sortable ASCII key (e.g. "2026-05",
- * "2026-05-01"); only the month and weekday *names* follow the configured
- * locale — "english" → `en-US` ("May", "Friday"); "system" → the OS locale's
- * language (see `getFormatters` for why the calendar/numbering are pinned).
- *
- * `rootFolder` may be the vault root (`"/"` or `""`), in which case year/month
- * folders are created at the top level of the vault.
+ * Builds year folder, month folder, and day note paths under `rootFolder`,
+ * using stable date prefixes and localized month/weekday names.
  */
 function buildDayPath(
   rootFolder: string,
@@ -89,13 +79,13 @@ function buildDayPath(
   const { numeric, names } = getFormatters(locale);
 
   const numericParts = numeric.formatToParts(date);
-  const yyyy = part(numericParts, "year");
-  const mm = part(numericParts, "month");
-  const dd = part(numericParts, "day");
+  const yyyy = extractDateTimeFormatPart(numericParts, "year");
+  const mm = extractDateTimeFormatPart(numericParts, "month");
+  const dd = extractDateTimeFormatPart(numericParts, "day");
 
   const nameParts = names.formatToParts(date);
-  const monthName = part(nameParts, "month");
-  const weekdayName = part(nameParts, "weekday");
+  const monthName = extractDateTimeFormatPart(nameParts, "month");
+  const weekdayName = extractDateTimeFormatPart(nameParts, "weekday");
 
   const yearFolderName = yyyy;
   const monthFolderName = `${yyyy}-${mm} ${monthName}`;

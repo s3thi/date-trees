@@ -2,6 +2,9 @@ import { TFile, TFolder, type Vault } from "obsidian";
 
 import type { DateTreeEntry } from "../types";
 
+/**
+ * Checks that a vault-relative path points to an existing Markdown file.
+ */
 function validateTemplateFile(
   vault: Vault,
   path: string,
@@ -23,6 +26,9 @@ function validateTemplateFile(
   return { file, error: null };
 }
 
+/**
+ * Collects folder and template validation errors for a configured tree.
+ */
 function collectDateTreeErrors(vault: Vault, entry: DateTreeEntry): string[] {
   const errors = [validateDateTree(vault, entry)];
   if (entry.templatePath) {
@@ -32,7 +38,7 @@ function collectDateTreeErrors(vault: Vault, entry: DateTreeEntry): string[] {
 }
 
 /**
- * Check if a configured date tree is still valid.
+ * Checks if a configured date tree is still valid.
  **/
 function validateDateTree(vault: Vault, entry: DateTreeEntry): string | null {
   const folder =

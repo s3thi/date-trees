@@ -18,7 +18,14 @@ interface DayPath {
 
 /** A registered date-tree root folder and its note template path. */
 interface DateTreeEntry {
+  /**
+   * Normalized vault-relative folder path; `/` represents the vault root.
+   */
   folderPath: string;
+
+  /**
+   * Normalized vault-relative template file path; empty means no template.
+   */
   templatePath: string;
 }
 
