@@ -47,6 +47,6 @@ However, automatic updates can fail (for example, if you reorganize your vault u
 
 Almost all of the code in this repository was written by an LLM. I've reviewed every line of LLM generated code using my own squishy human brain.
 
-That said, I'm not an expert at building Obsidian plugins. I'm certain I've allowed some (many?) mistakes to slip through. If you notice something wrong with the codebase, I would appreciate a PR, bug report, or [email](contact@ankursethi.com).
+That said, I'm not an expert at building Obsidian plugins. I'm certain I've allowed some (many?) mistakes to slip through. If you notice something wrong with the codebase, I would appreciate a PR, bug report, or [email](mailto:contact@ankursethi.com).
 
 Code contributions to this plugin are welcome from both humans and LLMs. However, please make sure you write your PR descriptions and bug reports entirely by hand. If a PR description or bug report appears to be written by an LLM, I will close it without explanation, appeal, or consideration.
