@@ -1,7 +1,3 @@
-.setting-group > .setting-item-heading .setting-item-description {
-  margin-top: 4px;
-}
-
 .date-trees-error {
   color: var(--text-error);
   font-size: var(--font-ui-small);

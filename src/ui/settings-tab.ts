@@ -1,10 +1,17 @@
-import { App, PluginSettingTab, SettingGroup } from "obsidian";
+import {
+  App,
+  Notice,
+  PluginSettingTab,
+  type SettingDefinitionItem,
+} from "obsidian";
 
 import type DateTreesPlugin from "../main";
-import { type DateTreeLocale } from "../types";
 import { unmarkDateTree } from "../core/settings";
 import { collectDateTreeErrors } from "../core/validators";
 
+/**
+ * Defines the locale control and the list of configured date trees.
+ */
 class DateTreesSettingTab extends PluginSettingTab {
   plugin: DateTreesPlugin;
 
@@ -13,92 +20,70 @@ class DateTreesSettingTab extends PluginSettingTab {
     this.plugin = plugin;
   }
 
-  display(): void {
-    const { containerEl } = this;
-    containerEl.empty();
-
-    const generalHeading = createFragment();
-    generalHeading.createDiv({ cls: "setting-item-name", text: "General" });
-
-    const generalSettingGroup = new SettingGroup(containerEl).setHeading(
-      generalHeading,
-    );
-
-    generalSettingGroup.addSetting((setting) => {
-      setting
-        .setName("Locale")
-        .setDesc(
-          "Controls the language used for day and month names in the date tree.",
-        )
-        .addDropdown((dropdown) => {
-          dropdown
-            .addOption("english", "English")
-            .addOption("system", "System")
-            .setValue(this.plugin.settings.locale)
-            .onChange(async (value) => {
-              this.plugin.settings.locale = value as DateTreeLocale;
-              await this.plugin.saveSettings();
-            });
-        });
-    });
-
-    const foldersDescText = createFragment();
-    foldersDescText.appendText(
+  /**
+   * Describes settings for native rendering and settings search.
+   */
+  getSettingDefinitions(): SettingDefinitionItem<"locale">[] {
+    // Keep folder instructions separate from the list so they cannot be deleted.
+    const foldersDesc = createFragment();
+    foldersDesc.appendText(
       "To mark folders as date trees, right-click them in the file explorer and click ",
     );
-    foldersDescText.appendChild(
-      createEl("strong", {
-        text: "Mark as date tree",
-      }),
-    );
-    foldersDescText.appendText(
+    foldersDesc.createEl("strong", { text: "Mark as date tree" });
+    foldersDesc.appendText(
       ". You can also use the commands available in the command palette.",
     );
 
-    const foldersHeading = createFragment();
-    foldersHeading.createDiv({ cls: "setting-item-name", text: "Folders" });
-    const foldersDesc = foldersHeading.createDiv({
-      cls: "setting-item-description",
+    // Describe each folder using cached vault metadata, without reading files.
+    const trees = this.plugin.settings.trees;
+    const items = trees.map((entry) => {
+      const description = createFragment();
+      description.createDiv({
+        text: `Template: ${entry.templatePath || "(none)"}`,
+      });
+      for (const error of collectDateTreeErrors(this.app.vault, entry)) {
+        description.createDiv({ cls: "date-trees-error", text: error });
+      }
+      return { name: entry.folderPath, desc: description };
     });
-    foldersDesc.appendChild(foldersDescText);
 
-    const foldersSettingGroup = new SettingGroup(containerEl).setHeading(
-      foldersHeading,
-    );
+    // Let Obsidian render and persist the locale dropdown and render the list.
+    return [
+      {
+        type: "group",
+        heading: "General",
+        items: [
+          {
+            name: "Locale",
+            desc: "Controls the language used for day and month names in the date tree.",
+            control: {
+              type: "dropdown",
+              key: "locale",
+              options: { english: "English", system: "System" },
+            },
+          },
+        ],
+      },
+      { name: "Folders", desc: foldersDesc },
+      {
+        type: "list",
+        emptyState: "No folders configured as date trees.",
+        items,
+        onDelete: (index) => {
+          // Resolve the displayed entry. Ignore an index outside this list.
+          const entry = trees[index];
+          if (!entry) return;
 
-    if (this.plugin.settings.trees.length === 0) {
-      foldersSettingGroup.addSetting((setting) => {
-        setting.setDesc("No folders configured as date trees.");
-      });
-    }
-
-    for (const entry of this.plugin.settings.trees) {
-      foldersSettingGroup.addSetting((setting) => {
-        const description = createFragment();
-        description.createDiv({
-          text: `Template: ${entry.templatePath || "(none)"}`,
-        });
-        for (const error of collectDateTreeErrors(this.app.vault, entry)) {
-          description.createDiv({ cls: "date-trees-error", text: error });
-        }
-        setting
-          .setName(entry.folderPath)
-          .setDesc(description)
-          .addExtraButton((btn) =>
-            btn
-              .setIcon("trash")
-              .setTooltip("Remove")
-              .onClick(async () => {
-                await unmarkDateTree(this.plugin, entry.folderPath);
-                this.rerender();
-              }),
+          // Saving the removal also refreshes the definitions and search index.
+          void unmarkDateTree(this.plugin, entry.folderPath).catch(
+            (error: unknown) => {
+              new Notice("Could not save the folder removal.");
+              console.error("Date trees: could not save folder removal", error);
+            },
           );
-      });
-    }
-  }
-
-  private rerender(): void {
-    this.display();
+        },
+      },
+    ];
   }
 }
 

@@ -10,10 +10,13 @@ import { DateTreesSettingTab } from "./ui/settings-tab";
 export default class DateTreesPlugin extends Plugin {
   settings: DateTreesSettings = structuredClone(DEFAULT_SETTINGS);
 
+  private settingsTab?: DateTreesSettingTab;
+
   async onload() {
     await this.loadSettings();
     registerDateTreeEvents(this);
-    this.addSettingTab(new DateTreesSettingTab(this.app, this));
+    this.settingsTab = new DateTreesSettingTab(this.app, this);
+    this.addSettingTab(this.settingsTab);
     registerContextMenus(this);
     registerCommands(this);
   }
@@ -24,5 +27,8 @@ export default class DateTreesPlugin extends Plugin {
 
   async saveSettings() {
     await this.saveData(this.settings);
+
+    // Keep folder definitions current after commands and vault events too.
+    this.settingsTab?.update();
   }
 }

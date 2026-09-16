@@ -43,6 +43,10 @@ Keep `main.ts` minimal; delegate feature logic to `core/` and `ui/`. Split files
 
 Copy `main.js`, `manifest.json`, and `styles.css` to `<Vault>/.obsidian/plugins/date-trees/`, then reload Obsidian and enable the plugin in **Settings → Community plugins**.
 
+Run the Obsidian CLI with a TTY (`tty: true` in `exec_command`). Without it,
+commands can exit successfully without running or returning results. Target this
+vault with `vault="Date trees"`.
+
 ## Security & privacy
 
 Local/offline by default. No hidden telemetry, no remote code. Only read/write inside the vault, only what the feature needs. Document any network call and require explicit opt-in.
