@@ -51,6 +51,17 @@ Local/offline by default. No hidden telemetry, no remote code. Only read/write i
 
 Omit needless words in READMEs, plan files, code comments, commit messages, and UI copy. Plan files contain only what's needed to execute: a one-line motivation plus the steps. No conversation history, dropped alternatives, or speculative future work.
 
+## Doc comments
+
+- All new code must have doc comments unless it is trivially simple or extremely short.
+- Keep doc comments in sync with the code they document. Update them whenever relevant code changes.
+- Use `/** ... */` immediately above declarations. Prefer multiline blocks with ` *` prefixes. Wrap near 80 columns.
+- Start with what the code does: “Creates…”, “Ensures…”, “Finds…”. Use short noun phrases for types and fields.
+- Usually write one or two sentences, in sentence case with periods. Use plain language and familiar project terms.
+- Mention relevant side effects, fallbacks, no-op behavior, and special values.
+- Put identifiers, tokens, and format strings in backticks.
+- Add a separate paragraph only when a constraint or design choice needs explanation. Use a small example when it clarifies behavior.
+
 ## References
 
 - API docs: https://docs.obsidian.md
