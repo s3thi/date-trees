@@ -51,6 +51,30 @@ Local/offline by default. No hidden telemetry, no remote code. Only read/write i
 
 Omit needless words in READMEs, plan files, code comments, commit messages, and UI copy. Plan files contain only what's needed to execute: a one-line motivation plus the steps. No conversation history, dropped alternatives, or speculative future work.
 
+## Narrative comments
+
+Write functions so they read like a story. Use comments above logical
+steps to explain what happens, in execution order.
+
+- Make comments easy to read. Use familiar words, short sentences, and
+  natural phrasing. Explain one idea at a time.
+- Prefer a few simple sentences over one dense sentence. The purpose is
+  to make the code easier to follow, not to pack the same information
+  into prose.
+- Describe what each step does, including straightforward behavior when
+  it helps the reader follow the story. Comments need not explain only why.
+- Cover meaningful branches, early returns, and side effects.
+- Use project terms rather than translating syntax into English.
+- Add enough detail that a reader can follow the function's flow by
+  reading its comments alone. Group related operations under one comment.
+- Keep the narration accurate as the code changes.
+
+Prefer:
+“If the user cancelled the picker, stop here. Nothing has changed yet.”
+
+Avoid:
+“Abort execution upon cancellation to preserve the existing configuration.”
+
 ## Doc comments
 
 - Add doc comments to new declarations unless their purpose and behavior are obvious from the code.

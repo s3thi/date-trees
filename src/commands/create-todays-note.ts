@@ -61,11 +61,14 @@ export async function createTodaysNoteInTree(
   plugin: DateTreesPlugin,
   entry: DateTreeEntry,
 ): Promise<void> {
+  // If this tree was removed from the settings, tell the user and stop here.
   if (!plugin.settings.trees.includes(entry)) {
     new Notice(`Date tree is no longer configured: ${entry.folderPath}`);
     return;
   }
 
+  // Check that the tree is valid before creating any folders or notes. If it
+  // isn't, show the problem and stop here.
   const { vault } = plugin.app;
   const error = validateDateTree(vault, entry);
   if (error) {
@@ -73,35 +76,44 @@ export async function createTodaysNoteInTree(
     return;
   }
 
+  // Work out today's folder and note paths using the configured locale.
   const { yearFolderPath, monthFolderPath, dayFilePath } = buildDayPath(
     entry.folderPath,
     new Date(),
     plugin.settings.locale,
   );
 
+  // Create any missing year and month folders, starting with the year.
   await createFolder(vault, yearFolderPath);
   await createFolder(vault, monthFolderPath);
 
+  // If today's note already exists, open it and stop here.
   const existing = vault.getAbstractFileByPath(dayFilePath);
   if (existing instanceof TFile) {
     await openFileInTab(plugin.app.workspace, existing);
     return;
   }
 
+  // Start with an empty note. If the tree has a template, fill it in for today.
   let content = "";
   let templateError: string | null = null;
   if (entry.templatePath) {
     try {
       content = await expandTemplate(plugin, entry.templatePath, dayFilePath);
     } catch (error: unknown) {
+      // If the template fails, keep the note empty and save the error to show
+      // after the note has been created.
       templateError = extractErrorMessage(error);
     }
   }
 
+  // Create the note and tell the user if a template error left it empty.
   const file = await vault.create(dayFilePath, content);
   if (templateError) {
     new Notice(`${templateError}\nCreated an empty note.`);
   }
+
+  // Open the new note so the user can start writing.
   await openFileInTab(plugin.app.workspace, file);
 }
 

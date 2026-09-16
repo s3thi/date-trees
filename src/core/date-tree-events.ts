@@ -65,24 +65,27 @@ async function updateConfiguredPathsAfterDelete(
 }
 
 /**
- * Keeps plugin settings in sync with the vault state by handling renamed files
- * and folders.
+ * Updates tree and template paths after a file or folder is renamed or moved.
+ * Keeps the moved tree when paths collide and saves only if settings changed.
  */
 async function updateConfiguredPathsAfterRename(
   plugin: DateTreesPlugin,
   oldPathRaw: string,
   newPathRaw: string,
 ): Promise<void> {
+  // Normalize both paths so they can be compared with the saved paths.
   const oldPath = normalizePath(oldPathRaw);
   const newPath = normalizePath(newPathRaw);
 
-  // Maps paths that changed to their corresponding date trees in the settings.
-  // We use this later to resolve duplicates.
+  // Remember which trees moved to each new path. We'll use this to keep the
+  // moved tree if another entry already points to the same folder.
   const renamedTrees = new Map<string, DateTreeEntry>();
 
-  // Track if anything actually changed.
+  // Track whether any saved paths change so we only save when needed.
   let changed = false;
 
+  // Check every tree's folder and template paths. Replace the renamed path
+  // wherever it matches, including paths inside a renamed folder.
   for (const tree of plugin.settings.trees) {
     const newFolderPath = replacePathPrefix(tree.folderPath, oldPath, newPath);
     const newTemplatePath = replacePathPrefix(
@@ -91,10 +94,12 @@ async function updateConfiguredPathsAfterRename(
       newPath,
     );
 
+    // If the tree's folder moved, remember the tree at its new path.
     if (newFolderPath !== tree.folderPath) {
       renamedTrees.set(newFolderPath, tree);
     }
 
+    // If either path changed, update the entry and mark settings for saving.
     if (
       newFolderPath !== tree.folderPath ||
       newTemplatePath !== tree.templatePath
@@ -105,6 +110,7 @@ async function updateConfiguredPathsAfterRename(
     }
   }
 
+  // If the rename didn't affect any configured paths, stop here.
   if (!changed) {
     return;
   }
@@ -117,6 +123,7 @@ async function updateConfiguredPathsAfterRename(
     return !renamedTree || renamedTree === tree;
   });
 
+  // Save the updated paths after removing any stale entries.
   await plugin.saveSettings();
 }
 
