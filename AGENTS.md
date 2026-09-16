@@ -9,7 +9,7 @@ Obsidian community plugin: TypeScript in `src/` bundled by esbuild to `main.js` 
 - `pnpm run build` — typecheck (`tsc -noEmit`) then production bundle.
 - `pnpm run lint` — ESLint with `eslint-plugin-obsidianmd`.
 
-Run `pnpm run lint` and `pnpm run build` after changes. No test suite; verify manually (below).
+Run `pnpm run lint` and `pnpm run build` only when code changes; skip them for documentation-only edits. No test suite; verify code changes manually (below).
 
 ## Layout
 
@@ -53,7 +53,7 @@ Omit needless words in READMEs, plan files, code comments, commit messages, and 
 
 ## Doc comments
 
-- All new code must have doc comments unless it is trivially simple or extremely short.
+- Add doc comments to new declarations unless their purpose and behavior are obvious from the code.
 - Keep doc comments in sync with the code they document. Update them whenever relevant code changes.
 - Use `/** ... */` immediately above declarations. Prefer multiline blocks with ` *` prefixes. Wrap near 80 columns.
 - Start with what the code does: “Creates…”, “Ensures…”, “Finds…”. Use short noun phrases for types and fields.
@@ -61,6 +61,38 @@ Omit needless words in READMEs, plan files, code comments, commit messages, and 
 - Mention relevant side effects, fallbacks, no-op behavior, and special values.
 - Put identifiers, tokens, and format strings in backticks.
 - Add a separate paragraph only when a constraint or design choice needs explanation. Use a small example when it clarifies behavior.
+
+## Releasing
+
+Use pnpm to bump versions and Git to commit and tag the release. Check `git status --short` before switching to `main`; proceed only with a clean working tree. Replace every `1.1.0` below with the release version, without a leading `v`.
+
+```sh
+git switch main
+pnpm version 1.1.0 --no-git-tag-version
+pnpm run lint
+pnpm run build
+git diff
+```
+
+The flag prevents an automatic commit and tag so you can review and build first. The version script updates `manifest.json` and adds the release to `versions.json` if absent. Review the diff: `package.json` and `manifest.json` must match the release version, and `versions.json` must map it to `manifest.json`'s `minAppVersion`. Complete manual verification before committing.
+
+Stage and review the version files:
+
+```sh
+git add package.json manifest.json versions.json
+git diff --cached
+```
+
+Confirm the staged diff contains only the reviewed version changes, then commit, tag, and push:
+
+```sh
+git commit -m "Release 1.1.0"
+git tag -a 1.1.0 -m "Release 1.1.0"
+git push origin main
+git push origin tag 1.1.0
+```
+
+Finally, remind the developer to create a GitHub release for that exact tag and attach `main.js`, `manifest.json`, and `styles.css`. Keep generated build artifacts out of version control.
 
 ## References
 

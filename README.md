@@ -1,59 +1,52 @@
 # Date Trees
 
-An Obsidian plugin for organizing chronological notes in a date tree directory structure, inspired by org-mode.
+An Obsidian plugin for organizing chronological notes into a tree of folders that's easier to navigate than a flat list of files.
 
 ## What is a date tree?
 
-A date tree is a folder hierarchy that organizes notes by date:
+A date tree is a hierarchical structure inspired by the way `org-mode` organizes chronological outlines. From [the `org-mode` documentation](https://orgmode.org/manual/Template-elements.html#FOOT86):
 
-+ Journal
-  + 2026
-    + 2026-05 May
+> A date tree is an outline structure with years on the highest level, months or ISO weeks as sublevels and then dates on the lowest level.
+
+When applied to a folder structure, it looks something like this:
+
+```
+- Journal
+  - 2026
+    - 2026-05 May
       - 2026-05-01 Friday.md
       - 2026-05-02 Saturday.md
       - 2026-05-03 Sunday.md
+```
 
-Each year is a folder. Each month is a folder named `YYYY-MM Month`. Each day is a file named `YYYY-MM-DD Weekday.md`.
+In this structure, each year is a folder, each month is a folder named `YYYY-MM Month`, and each day is a file named `YYYY-MM-DD Weekday.md`.
 
-Month and weekday names follow the configured locale. **English** uses US English names (e.g. `May`, `Friday`); **System** uses your operating system's locale. The numeric `YYYY-MM-DD` prefix is always Gregorian with Latin digits, so day files stay consistently sortable regardless of locale.
+This structure automatically sorts in chronological order at every level of the hierarchy when you select "Sort by name" in any file manager, text editor, or notes app. It's easier to navigate and work with than the flat structure Obsidian's `Daily notes` plugin uses by default.
 
 ## Usage
 
-- Mark folders as date trees by right-clicking them in the file explorer and selecting **Mark as date tree**, or via the **Mark folder as date tree** command in the command palette. You can mark multiple folders, and even the vault root.
-- When marking a folder, you can optionally choose a template for that tree. To change it later, right-click an already-marked folder and select **Change date tree template**.
-- To remove a date tree, right-click it and select **Unmark as date tree**, use the **Unmark folder as date tree** command, or use the trash button next to the entry in plugin settings.
-- The settings tab lists your configured date trees and their templates (but cannot add or edit them).
-- Use the **Today's note in date tree** command to add a file for today inside a date tree. If you have more than one date tree, you'll be asked which to use. The plugin creates any missing year/month folders for you. If today's file already exists, it is opened instead of recreated.
+- Mark an existing folder by right-clicking it in the file explorer and selecting **Mark as date tree…**, or by using **Mark folder as date tree…** in the command palette. You can mark multiple folders. To mark the vault root, select `/` in the command's folder picker.
+- Choose a Markdown file from your vault as the tree's template, or select **No template** for empty notes. To change or remove a template later, run **Mark folder as date tree…** again and select the same folder.
+- Use **Open today's note in date tree** in the command palette to create and open today's note, using your device's local date. If you have more than one tree, you'll be asked which one to use. The plugin creates missing year and month folders. If the note already exists at the expected path, it opens without changing its content.
+- You can also right-click a tree folder or any file or folder inside it and choose **Open today's note in "Folder Name"**. For nested trees, this uses the nearest enclosing tree.
+- To unmark a tree, right-click its root folder and select **Unmark as date tree**, use **Unmark folder as date tree…**, or click its trash button in **Settings → Date Trees**. Unmarking a date tree does not delete any existing notes.
 
-## Releasing
+## Locale settings
 
-Use pnpm to bump versions and Git to commit and tag the release. Start with a clean working tree on `main`. Replace `1.1.0` below with the release version, without a leading `v`.
+In the plugin settings, **Locale** controls month and weekday names: **English** (the default) uses US English, and **System** uses the system locale. Regardless of which locale you pick, numeric date prefixes will always use the Gregorian calendar and Latin digits.
 
-```sh
-git switch main
-git status
-pnpm version 1.1.0 --no-git-tag-version
-pnpm run lint
-pnpm run build
-git diff
-```
+Changing the locale does not rename existing files or folders, so choose a locale and stick with it. Otherwise, you might end up with inconsistent month and weekday names across your folders and files.
 
-The flag prevents an automatic commit and tag so you can review and build first. The version script updates `manifest.json` and adds the minimum Obsidian version to `versions.json`. Review the diff: `package.json` and `manifest.json` must match the release version, and `versions.json` must map it to `manifest.json`'s `minAppVersion`.
+## Reorganizing your vault
 
-Commit the reviewed version files, tag the release, and push both the branch and tag:
+In most cases, this plugin automatically tracks renamed, moved, or deleted date tree folders and templates. If you reorganize your vault, your date trees will usually continue to work as before.
 
-```sh
-git add package.json manifest.json versions.json
-git commit -m "Release 1.1.0"
-git tag -a 1.1.0 -m "Release 1.1.0"
-git push origin main
-git push origin tag 1.1.0
-```
+However, automatic updates can fail—for example, if an external program changes your vault while Obsidian is not running. In these cases, the plugin will show an error in the settings pane. To fix the problem, remove the date tree entry from the settings and add it again with the updated folder and template.
 
-Create a GitHub release for that exact tag and attach `main.js`, `manifest.json`, and `styles.css`. Keep generated build artifacts out of version control.
+## LLM use
 
-## Planned
+Almost all of the code in this repository was written by an LLM. I've reviewed every line of LLM generated code using my own squishy human brain.
 
-The following features are not yet implemented:
+That said, I'm not an expert at building Obsidian plugins. I'm certain I've allowed some mistakes to slip through. If you notice something wrong with the codebase, I would appreciate a PR, bug report, or [email](contact@ankursethi.com).
 
-- **Previous day**, and **Next day** commands for navigating between daily notes inside a date tree.
+Code contributions to this plugin are welcome from both humans and LLMs. However, please make sure you write your PR descriptions and bug reports entirely by hand. If a PR description or bug report appears to be written by an LLM, I will close the PR or issue without explanation or appeal.
