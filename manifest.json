@@ -1,7 +1,7 @@
 {
 	"id": "date-trees",
 	"name": "Date Trees",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"minAppVersion": "1.13.0",
 	"description": "Organize chronological notes in a date tree directory structure.",
 	"author": "Ankur Sethi",

@@ -1,6 +1,6 @@
 {
 	"name": "date-trees",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"description": "Organize chronological notes in a date tree directory structure.",
 	"main": "main.js",
 	"type": "module",
