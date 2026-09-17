@@ -56,9 +56,10 @@ async function markFolderAsDateTree(
 async function pickFolderAndMarkAsDateTree(
   plugin: DateTreesPlugin,
 ): Promise<void> {
+  // Allow user to pick any folder in the vault, including the vault root.
   const folderResult = await pick<TFolder>(
     plugin.app,
-    collectFolders(plugin.app.vault.getRoot()),
+    plugin.app.vault.getAllFolders(true),
     (folder) => (folder.isRoot() ? "/" : folder.path),
     {
       placeholder: "Pick a folder to mark as date tree…",
@@ -71,26 +72,6 @@ async function pickFolderAndMarkAsDateTree(
   }
 
   await markFolderAsDateTree(plugin, folderResult.value);
-}
-
-/**
- * Collects every folder under `root` (inclusive of `root`).
- */
-function collectFolders(root: TFolder): TFolder[] {
-  const out: TFolder[] = [root];
-  const stack: TFolder[] = [root];
-
-  while (stack.length > 0) {
-    const folder = stack.pop()!;
-    for (const child of folder.children) {
-      if (child instanceof TFolder) {
-        out.push(child);
-        stack.push(child);
-      }
-    }
-  }
-
-  return out;
 }
 
 export { markFolderAsDateTree, pickFolderAndMarkAsDateTree };
