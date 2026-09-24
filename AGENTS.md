@@ -43,7 +43,8 @@ Keep `main.ts` minimal; delegate feature logic to `core/` and `ui/`. Split files
 
 Copy `main.js`, `manifest.json`, and `styles.css` to `<Vault>/.obsidian/plugins/date-trees/`, then reload Obsidian and enable the plugin in **Settings → Community plugins**.
 
-Run the Obsidian CLI with a TTY (`tty: true` in `exec_command`). Without it,
+Do not use the Obsidian CLI to verify work unless the user explicitly asks.
+When requested, run it with a TTY (`tty: true` in `exec_command`). Without it,
 commands can exit successfully without running or returning results. Target this
 vault with `vault="Date trees"`.
 
@@ -90,7 +91,26 @@ Avoid:
 - Put identifiers, tokens, and format strings in backticks.
 - Add a separate paragraph only when a constraint or design choice needs explanation. Use a small example when it clarifies behavior.
 
+## Git commits
+
+Never create or amend a Git commit unless the user explicitly asks you to
+commit.
+
+When asked to commit, follow the repository's existing message style:
+
+- Use a short, single-line summary in sentence case, without a trailing period.
+- Prefer an action verb: “Add”, “Fix”, “Update”, “Remove”, “Replace”, or “Simplify”. As much as possible, use the imperative case.
+- Describe the change in plain, simple English. Use project terms. Never invent your own terms.
+- Omit Conventional Commit prefixes, scopes, emoji, and unnecessary detail.
+- When summarizing related changes, join them naturally with “and” or “plus”.
+- Use `Release X.Y.Z` for release commits.
+
+Examples: `Add template support`, `Fix context menu not appearing at vault root`,
+and `Rewrite README and update agents file`.
+
 ## Releasing
+
+The commit steps below require an explicit user request to commit.
 
 Use pnpm to bump versions and Git to commit and tag the release. Check `git status --short` before switching to `main`; proceed only with a clean working tree. Replace every `1.1.0` below with the release version, without a leading `v`.
 
