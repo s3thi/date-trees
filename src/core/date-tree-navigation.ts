@@ -14,11 +14,10 @@ interface CalendarDate {
 /**
  * Finds the nearest existing day note strictly before `currentNote` in `tree`.
  * Returns `null` if the tree is missing, the current note is not a valid day
- * note in it, or no earlier note exists. Does not open or change any files.
+ * note in it, or no earlier note exists.
  *
- * Dates come from matching year/month/day path prefixes, regardless of locale.
  * If several notes share the previous date, the first path in character order
- * wins. Notes on the current date are skipped.
+ * wins.
  */
 function findPreviousNote(
   vault: Vault,
@@ -122,6 +121,109 @@ function findPreviousNote(
 }
 
 /**
+ * Finds the nearest existing day note strictly after `currentNote` in `tree`.
+ * Returns `null` if the tree is missing, the current note is not a valid day
+ * note in it, or no later note exists.
+ *
+ * If several notes share the next date, the first path in character order wins.
+ */
+function findNextNote(
+  vault: Vault,
+  tree: DateTreeEntry,
+  currentNote: TFile,
+): TFile | null {
+  // Find this date tree's root folder.
+  const dateTreeRoot =
+    tree.folderPath === "/"
+      ? vault.getRoot()
+      : vault.getAbstractFileByPath(tree.folderPath);
+
+  if (!(dateTreeRoot instanceof TFolder)) {
+    return null;
+  }
+
+  // Check that the current note belongs to this date tree and has a valid date
+  // in its filename.
+  const currentDate = validateAndExtractNoteDate(dateTreeRoot, currentNote);
+  if (currentDate === null) {
+    return null;
+  }
+
+  // Visit only year and month folders in this tree, using Obsidian's in-memory
+  // children. Ignore unrelated folders and years earlier than the current note.
+  let nextNote: TFile | null = null;
+  let nextDate: CalendarDate | null = null;
+  for (const yearFolder of dateTreeRoot.children) {
+    // Skip folders that don't have valid year folder names, and folders
+    // representing years before the current note.
+    if (
+      !(yearFolder instanceof TFolder) ||
+      !/^\d{4}$/.test(yearFolder.name) ||
+      Number(yearFolder.name) < currentDate.year
+    ) {
+      continue;
+    }
+
+    // Iterate through months within a year folder.
+    for (const monthFolder of yearFolder.children) {
+      // Skip folders that don't have valid month folder names or don't belong
+      // to this year.
+      if (
+        !(monthFolder instanceof TFolder) ||
+        !/^\d{4}-\d{2} .+$/.test(monthFolder.name) ||
+        Number(monthFolder.name.slice(0, 4)) !== Number(yearFolder.name)
+      ) {
+        continue;
+      }
+
+      // Skip invalid month numbers and months before the current note's month
+      // in the same year. All months in later years can contain newer notes.
+      const monthNumber = Number(monthFolder.name.slice(5, 7));
+      if (
+        monthNumber < 1 ||
+        monthNumber > 12 ||
+        (Number(yearFolder.name) === currentDate.year &&
+          monthNumber < currentDate.month)
+      ) {
+        continue;
+      }
+
+      // Iterate through notes within a month folder.
+      for (const file of monthFolder.children) {
+        if (!(file instanceof TFile)) {
+          continue;
+        }
+
+        // Skip notes with invalid dates, and notes dated on or before the
+        // current note's date.
+        const date = validateAndExtractNoteDate(dateTreeRoot, file);
+        if (date === null) {
+          continue;
+        }
+        if (compareDates(date, currentDate) <= 0) {
+          continue;
+        }
+
+        // Keep the closest later date. If two notes share that date, keep the
+        // note whose path comes first in character order.
+        const comparison =
+          nextDate === null ? -1 : compareDates(date, nextDate);
+        if (
+          comparison < 0 ||
+          (comparison === 0 && nextNote !== null && file.path < nextNote.path)
+        ) {
+          nextNote = file;
+          nextDate = date;
+        }
+      }
+    }
+  }
+
+  // Return the next note, or `null` if no later note exists in this date tree.
+  return nextNote;
+}
+
+/**
  * Returns the note's calendar date, or `null` if it isn't a valid day note in
  * this date tree. Reads numeric year, month, and day values without a time
  * zone.
@@ -204,4 +306,4 @@ function compareDates(left: CalendarDate, right: CalendarDate): number {
   return left.day - right.day;
 }
 
-export { findPreviousNote };
+export { findPreviousNote, findNextNote };
