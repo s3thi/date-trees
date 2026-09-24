@@ -24,100 +24,7 @@ function findPreviousNote(
   tree: DateTreeEntry,
   currentNote: TFile,
 ): TFile | null {
-  // Find this date tree's root folder.
-  const dateTreeRoot =
-    tree.folderPath === "/"
-      ? vault.getRoot()
-      : vault.getAbstractFileByPath(tree.folderPath);
-
-  if (!(dateTreeRoot instanceof TFolder)) {
-    return null;
-  }
-
-  // Check that the current note belongs to this date tree and has a valid date
-  // in its filename.
-  const currentDate = validateAndExtractNoteDate(dateTreeRoot, currentNote);
-  if (currentDate === null) {
-    return null;
-  }
-
-  // Visit only year and month folders in this tree, using Obsidian's in-memory
-  // children. Ignore unrelated folders and years later than the current note.
-  let previousNote: TFile | null = null;
-  let previousDate: CalendarDate | null = null;
-  for (const yearFolder of dateTreeRoot.children) {
-    // Skip folders that don't have valid year folder names, and folders
-    // representing years in the future.
-    if (
-      !(yearFolder instanceof TFolder) ||
-      !/^\d{4}$/.test(yearFolder.name) ||
-      Number(yearFolder.name) > currentDate.year
-    ) {
-      continue;
-    }
-
-    // Iterate through months within a year folder.
-    for (const monthFolder of yearFolder.children) {
-      // Skip folders that don't have valid month folder names or don't belong
-      // to this year.
-      if (
-        !(monthFolder instanceof TFolder) ||
-        !/^\d{4}-\d{2} .+$/.test(monthFolder.name) ||
-        Number(monthFolder.name.slice(0, 4)) !== Number(yearFolder.name)
-      ) {
-        continue;
-      }
-
-      // Skip invalid month numbers and months after the current note's month
-      // in the same year. All months in earlier years can contain older notes.
-      const monthNumber = Number(monthFolder.name.slice(5, 7));
-      if (
-        monthNumber < 1 ||
-        monthNumber > 12 ||
-        (Number(yearFolder.name) === currentDate.year &&
-          monthNumber > currentDate.month)
-      ) {
-        continue;
-      }
-
-      // Iterate through notes within a month folder.
-      for (const file of monthFolder.children) {
-        if (!(file instanceof TFile)) {
-          continue;
-        }
-
-        // Skip notes with invalid dates, and notes dated on or after the
-        // current note's date.
-        const date = validateAndExtractNoteDate(dateTreeRoot, file);
-        if (date === null) {
-          continue;
-        }
-        if (compareDates(date, currentDate) >= 0) {
-          continue;
-        }
-
-        // Update `previousNote` and `previousDate` if this note's date is
-        // closer to the current note's date. If two notes have the exact same
-        // date, update the variables only if this file's path sorts first when
-        // sorted in alphabetical order.
-        const comparison =
-          previousDate === null ? 1 : compareDates(date, previousDate);
-        if (
-          comparison > 0 ||
-          (comparison === 0 &&
-            previousNote !== null &&
-            file.path < previousNote.path)
-        ) {
-          previousNote = file;
-          previousDate = date;
-        }
-      }
-    }
-  }
-
-  // Return the previous note. If the previous note is still `null` by this
-  // point, it means there are no more previous notes in the current date tree.
-  return previousNote;
+  return findAdjacentNote(vault, tree, currentNote, "previous");
 }
 
 /**
@@ -131,6 +38,20 @@ function findNextNote(
   vault: Vault,
   tree: DateTreeEntry,
   currentNote: TFile,
+): TFile | null {
+  return findAdjacentNote(vault, tree, currentNote, "next");
+}
+
+/**
+ * Finds the nearest valid day note in the requested direction, skipping the
+ * current date. Returns `null` for an invalid tree or current note, or when no
+ * matching note exists. Breaks ties by choosing the first path in character order.
+ */
+function findAdjacentNote(
+  vault: Vault,
+  tree: DateTreeEntry,
+  currentNote: TFile,
+  direction: "previous" | "next",
 ): TFile | null {
   // Find this date tree's root folder.
   const dateTreeRoot =
@@ -150,16 +71,20 @@ function findNextNote(
   }
 
   // Visit only year and month folders in this tree, using Obsidian's in-memory
-  // children. Ignore unrelated folders and years earlier than the current note.
-  let nextNote: TFile | null = null;
-  let nextDate: CalendarDate | null = null;
+  // children. Ignore unrelated folders and dates in the opposite direction.
+  const isPrevious = direction === "previous";
+  let adjacentNote: TFile | null = null;
+  let adjacentDate: CalendarDate | null = null;
   for (const yearFolder of dateTreeRoot.children) {
-    // Skip folders that don't have valid year folder names, and folders
-    // representing years before the current note.
+    // Skip folders that don't have valid year folder names.
+    if (!(yearFolder instanceof TFolder) || !/^\d{4}$/.test(yearFolder.name)) {
+      continue;
+    }
+
+    // Skip years in the opposite direction from the current note.
+    const yearNumber = Number(yearFolder.name);
     if (
-      !(yearFolder instanceof TFolder) ||
-      !/^\d{4}$/.test(yearFolder.name) ||
-      Number(yearFolder.name) < currentDate.year
+      isPrevious ? yearNumber > currentDate.year : yearNumber < currentDate.year
     ) {
       continue;
     }
@@ -171,19 +96,22 @@ function findNextNote(
       if (
         !(monthFolder instanceof TFolder) ||
         !/^\d{4}-\d{2} .+$/.test(monthFolder.name) ||
-        Number(monthFolder.name.slice(0, 4)) !== Number(yearFolder.name)
+        Number(monthFolder.name.slice(0, 4)) !== yearNumber
       ) {
         continue;
       }
 
-      // Skip invalid month numbers and months before the current note's month
-      // in the same year. All months in later years can contain newer notes.
+      // Skip invalid month numbers. Within the current year, also skip
+      // months in the opposite direction. Include the current month.
       const monthNumber = Number(monthFolder.name.slice(5, 7));
+      if (monthNumber < 1 || monthNumber > 12) {
+        continue;
+      }
       if (
-        monthNumber < 1 ||
-        monthNumber > 12 ||
-        (Number(yearFolder.name) === currentDate.year &&
-          monthNumber < currentDate.month)
+        yearNumber === currentDate.year &&
+        (isPrevious
+          ? monthNumber > currentDate.month
+          : monthNumber < currentDate.month)
       ) {
         continue;
       }
@@ -194,33 +122,43 @@ function findNextNote(
           continue;
         }
 
-        // Skip notes with invalid dates, and notes dated on or before the
-        // current note's date.
+        // Skip invalid dates, notes on the current date, and notes in the
+        // opposite direction.
         const date = validateAndExtractNoteDate(dateTreeRoot, file);
         if (date === null) {
           continue;
         }
-        if (compareDates(date, currentDate) <= 0) {
+        const currentComparison = compareDates(date, currentDate);
+        if (isPrevious ? currentComparison >= 0 : currentComparison <= 0) {
           continue;
         }
 
-        // Keep the closest later date. If two notes share that date, keep the
-        // note whose path comes first in character order.
-        const comparison =
-          nextDate === null ? -1 : compareDates(date, nextDate);
+        // Keep the first eligible note so later notes have a date to beat.
+        if (adjacentDate === null) {
+          adjacentNote = file;
+          adjacentDate = date;
+          continue;
+        }
+
+        // Keep the closer date in the requested direction. If two notes share
+        // that date, keep the note whose path comes first in character order.
+        const comparison = compareDates(date, adjacentDate);
+        const isCloser = isPrevious ? comparison > 0 : comparison < 0;
         if (
-          comparison < 0 ||
-          (comparison === 0 && nextNote !== null && file.path < nextNote.path)
+          isCloser ||
+          (comparison === 0 &&
+            adjacentNote !== null &&
+            file.path < adjacentNote.path)
         ) {
-          nextNote = file;
-          nextDate = date;
+          adjacentNote = file;
+          adjacentDate = date;
         }
       }
     }
   }
 
-  // Return the next note, or `null` if no later note exists in this date tree.
-  return nextNote;
+  // Return the closest note, or `null` if none exists in this direction.
+  return adjacentNote;
 }
 
 /**
