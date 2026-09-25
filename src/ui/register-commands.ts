@@ -2,7 +2,7 @@ import type DateTreesPlugin from "../main";
 import { pickFolderAndMarkAsDateTree } from "../commands/mark-date-tree";
 import { pickFolderAndUnmarkAsDateTree } from "../commands/unmark-date-tree";
 import { pickDateTreeAndCreateTodaysNote } from "../commands/create-todays-note";
-import { navigateDateTree } from "../commands/navigate-date-tree";
+import { openAdjacentNoteInDateTree } from "../commands/navigate-date-tree";
 import { runCommand } from "./run-command";
 
 function registerCommands(plugin: DateTreesPlugin) {
@@ -34,7 +34,7 @@ function registerCommands(plugin: DateTreesPlugin) {
     id: "open-next-note",
     name: "Open next note",
     callback: () => {
-      runCommand(() => navigateDateTree(plugin, "next", false));
+      runCommand(() => openAdjacentNoteInDateTree(plugin, "next", false));
     },
   });
 
@@ -42,7 +42,7 @@ function registerCommands(plugin: DateTreesPlugin) {
     id: "open-previous-note",
     name: "Open previous note",
     callback: () => {
-      runCommand(() => navigateDateTree(plugin, "previous", false));
+      runCommand(() => openAdjacentNoteInDateTree(plugin, "previous", false));
     },
   });
 
@@ -50,7 +50,7 @@ function registerCommands(plugin: DateTreesPlugin) {
     id: "open-next-note-in-new-tab",
     name: "Open next note in new tab",
     callback: () => {
-      runCommand(() => navigateDateTree(plugin, "next", true));
+      runCommand(() => openAdjacentNoteInDateTree(plugin, "next", true));
     },
   });
 
@@ -58,7 +58,7 @@ function registerCommands(plugin: DateTreesPlugin) {
     id: "open-previous-note-in-new-tab",
     name: "Open previous note in new tab",
     callback: () => {
-      runCommand(() => navigateDateTree(plugin, "previous", true));
+      runCommand(() => openAdjacentNoteInDateTree(plugin, "previous", true));
     },
   });
 }

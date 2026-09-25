@@ -11,10 +11,17 @@ interface CalendarDate {
   day: number;
 }
 
+/** Describes the outcome of looking for an adjacent day note. */
+type NavigationResult =
+  | { status: "found"; note: TFile }
+  | { status: "invalid-tree" }
+  | { status: "invalid-current-note" }
+  | { status: "no-adjacent-note" };
+
 /**
  * Finds the nearest existing day note strictly before `currentNote` in `tree`.
- * Returns `null` if the tree is missing, the current note is not a valid day
- * note in it, or no earlier note exists.
+ * Reports whether the tree or starting note is invalid, or no earlier note
+ * exists.
  *
  * If several notes share the previous date, the first path in character order
  * wins.
@@ -23,14 +30,14 @@ function findPreviousNote(
   vault: Vault,
   tree: DateTreeEntry,
   currentNote: TFile,
-): TFile | null {
+): NavigationResult {
   return findAdjacentNote(vault, tree, currentNote, "previous");
 }
 
 /**
  * Finds the nearest existing day note strictly after `currentNote` in `tree`.
- * Returns `null` if the tree is missing, the current note is not a valid day
- * note in it, or no later note exists.
+ * Reports whether the tree or starting note is invalid, or no later note
+ * exists.
  *
  * If several notes share the next date, the first path in character order wins.
  */
@@ -38,21 +45,21 @@ function findNextNote(
   vault: Vault,
   tree: DateTreeEntry,
   currentNote: TFile,
-): TFile | null {
+): NavigationResult {
   return findAdjacentNote(vault, tree, currentNote, "next");
 }
 
 /**
  * Finds the nearest valid day note in the requested direction, skipping the
- * current date. Returns `null` for an invalid tree or current note, or when no
- * matching note exists. Breaks ties by choosing the first path in character order.
+ * current date. Reports invalid inputs and an empty search separately. Breaks
+ * ties by choosing the first path in character order.
  */
 function findAdjacentNote(
   vault: Vault,
   tree: DateTreeEntry,
   currentNote: TFile,
   direction: "previous" | "next",
-): TFile | null {
+): NavigationResult {
   // Find this date tree's root folder.
   const dateTreeRoot =
     tree.folderPath === "/"
@@ -60,14 +67,14 @@ function findAdjacentNote(
       : vault.getAbstractFileByPath(tree.folderPath);
 
   if (!(dateTreeRoot instanceof TFolder)) {
-    return null;
+    return { status: "invalid-tree" };
   }
 
   // Check that the current note belongs to this date tree and has a valid date
   // in its filename.
   const currentDate = validateAndExtractNoteDate(dateTreeRoot, currentNote);
   if (currentDate === null) {
-    return null;
+    return { status: "invalid-current-note" };
   }
 
   // Visit only year and month folders in this tree, using Obsidian's in-memory
@@ -157,8 +164,10 @@ function findAdjacentNote(
     }
   }
 
-  // Return the closest note, or `null` if none exists in this direction.
-  return adjacentNote;
+  // Return the closest note, or report that this direction has no day note.
+  return adjacentNote === null
+    ? { status: "no-adjacent-note" }
+    : { status: "found", note: adjacentNote };
 }
 
 /**
