@@ -2,6 +2,7 @@ import type DateTreesPlugin from "../main";
 import { pickFolderAndMarkAsDateTree } from "../commands/mark-date-tree";
 import { pickFolderAndUnmarkAsDateTree } from "../commands/unmark-date-tree";
 import { pickDateTreeAndCreateTodaysNote } from "../commands/create-todays-note";
+import { navigateDateTree } from "../commands/navigate-date-tree";
 import { runCommand } from "./run-command";
 
 function registerCommands(plugin: DateTreesPlugin) {
@@ -22,10 +23,42 @@ function registerCommands(plugin: DateTreesPlugin) {
   });
 
   plugin.addCommand({
-    id: "create-todays-note",
-    name: "Open today's note in date tree",
+    id: "open-todays-note",
+    name: "Open today's note…",
     callback: () => {
       runCommand(() => pickDateTreeAndCreateTodaysNote(plugin));
+    },
+  });
+
+  plugin.addCommand({
+    id: "open-next-note",
+    name: "Open next note",
+    callback: () => {
+      runCommand(() => navigateDateTree(plugin, "next", false));
+    },
+  });
+
+  plugin.addCommand({
+    id: "open-previous-note",
+    name: "Open previous note",
+    callback: () => {
+      runCommand(() => navigateDateTree(plugin, "previous", false));
+    },
+  });
+
+  plugin.addCommand({
+    id: "open-next-note-in-new-tab",
+    name: "Open next note in new tab",
+    callback: () => {
+      runCommand(() => navigateDateTree(plugin, "next", true));
+    },
+  });
+
+  plugin.addCommand({
+    id: "open-previous-note-in-new-tab",
+    name: "Open previous note in new tab",
+    callback: () => {
+      runCommand(() => navigateDateTree(plugin, "previous", true));
     },
   });
 }
