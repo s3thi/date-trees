@@ -9,7 +9,6 @@ import { openFileInTab } from "../ui/open-file";
 async function openAdjacentNoteInDateTree(
   plugin: DateTreesPlugin,
   direction: "next" | "previous",
-  shouldOpenInNewTab: boolean,
 ): Promise<void> {
   // Get the note and tab the user is navigating from.
   const { workspace, vault } = plugin.app;
@@ -44,9 +43,9 @@ async function openAdjacentNoteInDateTree(
     return;
   }
 
-  // Keep a pinned tab on its current note. For a new tab, focus an existing
-  // tab that already shows the adjacent note instead of opening a duplicate.
-  if (shouldOpenInNewTab || view.leaf.getViewState().pinned) {
+  // Keep a pinned tab on its current note. Focus an existing tab that shows
+  // the adjacent note, or open a new tab if needed.
+  if (view.leaf.getViewState().pinned) {
     await openFileInTab(workspace, result.note);
   } else {
     // Replace the current note only when its tab is unpinned.

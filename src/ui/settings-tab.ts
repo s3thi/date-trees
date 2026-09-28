@@ -16,29 +16,10 @@ import { collectDateTreeErrors } from "../core/validators";
  */
 class DateTreesSettingTab extends PluginSettingTab {
   plugin: DateTreesPlugin;
-  private updateRibbonNavigation: () => void;
 
-  constructor(
-    app: App,
-    plugin: DateTreesPlugin,
-    updateRibbonNavigation: () => void,
-  ) {
+  constructor(app: App, plugin: DateTreesPlugin) {
     super(app, plugin);
     this.plugin = plugin;
-    this.updateRibbonNavigation = updateRibbonNavigation;
-  }
-
-  /**
-   * Refreshes ribbon buttons after a navigation setting is saved.
-   */
-  async setControlValue(key: string, value: unknown): Promise<void> {
-    await super.setControlValue(key, value);
-    if (
-      key === "shouldShowNavigationRibbonIcons" ||
-      key === "shouldShowNewTabNavigationRibbonIcons"
-    ) {
-      this.updateRibbonNavigation();
-    }
   }
 
   /**
@@ -77,28 +58,6 @@ class DateTreesSettingTab extends PluginSettingTab {
               type: "dropdown",
               key: "locale",
               options: { english: "English", system: "System" },
-            },
-          },
-        ],
-      },
-      {
-        type: "group",
-        heading: "Ribbon buttons",
-        items: [
-          {
-            name: "Navigate in current tab",
-            desc: "Add ribbon buttons to open the previous and next date tree notes in the current tab.",
-            control: {
-              type: "toggle",
-              key: "shouldShowNavigationRibbonIcons",
-            },
-          },
-          {
-            name: "Navigate in new tab",
-            desc: "Add ribbon buttons to open the previous and next date tree notes in a new tab.",
-            control: {
-              type: "toggle",
-              key: "shouldShowNewTabNavigationRibbonIcons",
             },
           },
         ],

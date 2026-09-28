@@ -2,26 +2,27 @@ import { normalizePath } from "obsidian";
 
 import type DateTreesPlugin from "../main";
 import {
-  DEFAULT_SETTINGS,
   type DateTreeEntry,
   type DateTreeLocale,
   type DateTreesSettings,
 } from "../types";
 
 /**
- * Coerce arbitrary persisted data into a valid settings object. `loadData()`
- * can return anything (corrupt file, older schema, hand-edited JSON), so we
- * never trust its shape and drop entries that don't look like a DateTreeEntry.
+ * Load saved settings, check them for errors, and return a valid settings
+ * object.
  */
 function normalizeSettings(data: unknown): DateTreesSettings {
-  const raw = (data ?? {}) as Partial<DateTreesSettings>;
-  const trees = Array.isArray(raw.trees) ? raw.trees : [];
+  const rawSettings = (data ?? {}) as Partial<DateTreesSettings>;
+  const rawTrees = Array.isArray(rawSettings.trees) ? rawSettings.trees : [];
 
-  const cleaned: DateTreeEntry[] = [];
-  const seen = new Set<string>();
+  // Collect valid trees and track their paths to make sure each folder appears
+  // only once in the settings object.
+  const cleanedTrees: DateTreeEntry[] = [];
+  const seenPaths = new Set<string>();
 
-  // Validate date tree entries.
-  for (const entry of trees) {
+  // Check each saved tree before adding it to the settings.
+  for (const entry of rawTrees) {
+    // Skip values that cannot describe a tree.
     if (!entry || typeof entry !== "object") {
       console.warn(
         "Invalid date tree entry found in settings file. Skipping.",
@@ -30,12 +31,13 @@ function normalizeSettings(data: unknown): DateTreesSettings {
       continue;
     }
 
+    // Clean the folder path. Skip empty paths and folders already added.
     const folderPath =
       typeof entry.folderPath === "string"
         ? normalizePath(entry.folderPath.trim())
         : "";
 
-    if (folderPath.length === 0 || seen.has(folderPath)) {
+    if (folderPath.length === 0 || seenPaths.has(folderPath)) {
       console.warn(
         "Invalid date tree entry found in settings file. Skipping.",
         entry,
@@ -43,37 +45,27 @@ function normalizeSettings(data: unknown): DateTreesSettings {
       continue;
     }
 
+    // Silently drop invalid template paths.
     const templatePath =
       typeof entry.templatePath === "string" && entry.templatePath.trim()
         ? normalizePath(entry.templatePath.trim())
         : "";
 
-    seen.add(folderPath);
-    cleaned.push({ folderPath, templatePath });
+    // Save this tree and prevent another entry from using the same folder.
+    seenPaths.add(folderPath);
+    cleanedTrees.push({ folderPath, templatePath });
   }
 
-  // Validate locale.
+  // Use a supported locale, falling back to English for other saved values.
   const locale: DateTreeLocale =
-    raw.locale === "english" || raw.locale === "system"
-      ? raw.locale
+    rawSettings.locale === "english" || rawSettings.locale === "system"
+      ? rawSettings.locale
       : "english";
 
-  // If the user has changed the preferences for displaying ribbon navigation
-  // buttons, return the saved preferences. Otherwise, use default settings.
-  const shouldShowNavigationRibbonIcons =
-    typeof raw.shouldShowNavigationRibbonIcons === "boolean"
-      ? raw.shouldShowNavigationRibbonIcons
-      : DEFAULT_SETTINGS.shouldShowNavigationRibbonIcons;
-  const shouldShowNewTabNavigationRibbonIcons =
-    typeof raw.shouldShowNewTabNavigationRibbonIcons === "boolean"
-      ? raw.shouldShowNewTabNavigationRibbonIcons
-      : DEFAULT_SETTINGS.shouldShowNewTabNavigationRibbonIcons;
-
+  // Return only the settings the plugin still uses.
   return {
     locale,
-    shouldShowNavigationRibbonIcons,
-    shouldShowNewTabNavigationRibbonIcons,
-    trees: cleaned,
+    trees: cleanedTrees,
   };
 }
 

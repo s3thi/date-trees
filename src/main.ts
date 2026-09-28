@@ -16,12 +16,8 @@ export default class DateTreesPlugin extends Plugin {
   async onload() {
     await this.loadSettings();
     registerDateTreeEvents(this);
-    const updateRibbonNavigation = registerRibbonNavigation(this);
-    this.settingsTab = new DateTreesSettingTab(
-      this.app,
-      this,
-      updateRibbonNavigation,
-    );
+    registerRibbonNavigation(this);
+    this.settingsTab = new DateTreesSettingTab(this.app, this);
     this.addSettingTab(this.settingsTab);
     registerContextMenus(this);
     registerCommands(this);

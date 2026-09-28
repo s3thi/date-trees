@@ -34,7 +34,7 @@ function registerCommands(plugin: DateTreesPlugin) {
     id: "open-next-note",
     name: "Open next note",
     callback: () => {
-      runCommand(() => openAdjacentNoteInDateTree(plugin, "next", false));
+      runCommand(() => openAdjacentNoteInDateTree(plugin, "next"));
     },
   });
 
@@ -42,23 +42,7 @@ function registerCommands(plugin: DateTreesPlugin) {
     id: "open-previous-note",
     name: "Open previous note",
     callback: () => {
-      runCommand(() => openAdjacentNoteInDateTree(plugin, "previous", false));
-    },
-  });
-
-  plugin.addCommand({
-    id: "open-next-note-in-new-tab",
-    name: "Open next note in new tab",
-    callback: () => {
-      runCommand(() => openAdjacentNoteInDateTree(plugin, "next", true));
-    },
-  });
-
-  plugin.addCommand({
-    id: "open-previous-note-in-new-tab",
-    name: "Open previous note in new tab",
-    callback: () => {
-      runCommand(() => openAdjacentNoteInDateTree(plugin, "previous", true));
+      runCommand(() => openAdjacentNoteInDateTree(plugin, "previous"));
     },
   });
 }
