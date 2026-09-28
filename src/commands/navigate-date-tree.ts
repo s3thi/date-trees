@@ -44,11 +44,12 @@ async function openAdjacentNoteInDateTree(
     return;
   }
 
-  // Open the adjacent note in the original tab. For the new-tab case, focus an
-  // existing tab that already shows it instead of opening a duplicate.
-  if (shouldOpenInNewTab) {
+  // Keep a pinned tab on its current note. For a new tab, focus an existing
+  // tab that already shows the adjacent note instead of opening a duplicate.
+  if (shouldOpenInNewTab || view.leaf.getViewState().pinned) {
     await openFileInTab(workspace, result.note);
   } else {
+    // Replace the current note only when its tab is unpinned.
     await view.leaf.openFile(result.note);
   }
 }

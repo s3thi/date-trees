@@ -16,10 +16,29 @@ import { collectDateTreeErrors } from "../core/validators";
  */
 class DateTreesSettingTab extends PluginSettingTab {
   plugin: DateTreesPlugin;
+  private updateRibbonNavigation: () => void;
 
-  constructor(app: App, plugin: DateTreesPlugin) {
+  constructor(
+    app: App,
+    plugin: DateTreesPlugin,
+    updateRibbonNavigation: () => void,
+  ) {
     super(app, plugin);
     this.plugin = plugin;
+    this.updateRibbonNavigation = updateRibbonNavigation;
+  }
+
+  /**
+   * Refreshes ribbon buttons after a navigation setting is saved.
+   */
+  async setControlValue(key: string, value: unknown): Promise<void> {
+    await super.setControlValue(key, value);
+    if (
+      key === "shouldShowNavigationRibbonIcons" ||
+      key === "shouldShowNewTabNavigationRibbonIcons"
+    ) {
+      this.updateRibbonNavigation();
+    }
   }
 
   /**
@@ -87,7 +106,8 @@ class DateTreesSettingTab extends PluginSettingTab {
       {
         type: "list",
         heading: "Folders",
-        emptyState: "No folders configured as date trees.",
+        emptyState:
+          "No folders configured. Right-click a folder in the file explorer to mark it as a date tree.",
         items,
         onDelete: (index) => {
           // Resolve the displayed entry. Ignore an index outside this list.

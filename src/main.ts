@@ -5,6 +5,7 @@ import { normalizeSettings } from "./core/settings";
 import { DEFAULT_SETTINGS, type DateTreesSettings } from "./types";
 import { registerContextMenus } from "./ui/register-context-menus";
 import { registerCommands } from "./ui/register-commands";
+import { registerRibbonNavigation } from "./ui/register-ribbon-navigation";
 import { DateTreesSettingTab } from "./ui/settings-tab";
 
 export default class DateTreesPlugin extends Plugin {
@@ -15,7 +16,12 @@ export default class DateTreesPlugin extends Plugin {
   async onload() {
     await this.loadSettings();
     registerDateTreeEvents(this);
-    this.settingsTab = new DateTreesSettingTab(this.app, this);
+    const updateRibbonNavigation = registerRibbonNavigation(this);
+    this.settingsTab = new DateTreesSettingTab(
+      this.app,
+      this,
+      updateRibbonNavigation,
+    );
     this.addSettingTab(this.settingsTab);
     registerContextMenus(this);
     registerCommands(this);
