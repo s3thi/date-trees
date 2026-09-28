@@ -2,6 +2,7 @@ import { normalizePath } from "obsidian";
 
 import type DateTreesPlugin from "../main";
 import {
+  DEFAULT_SETTINGS,
   type DateTreeEntry,
   type DateTreeLocale,
   type DateTreesSettings,
@@ -57,7 +58,23 @@ function normalizeSettings(data: unknown): DateTreesSettings {
       ? raw.locale
       : "english";
 
-  return { locale, trees: cleaned };
+  // If the user has changed the preferences for displaying ribbon navigation
+  // buttons, return the saved preferences. Otherwise, use default settings.
+  const shouldShowNavigationRibbonIcons =
+    typeof raw.shouldShowNavigationRibbonIcons === "boolean"
+      ? raw.shouldShowNavigationRibbonIcons
+      : DEFAULT_SETTINGS.shouldShowNavigationRibbonIcons;
+  const shouldShowNewTabNavigationRibbonIcons =
+    typeof raw.shouldShowNewTabNavigationRibbonIcons === "boolean"
+      ? raw.shouldShowNewTabNavigationRibbonIcons
+      : DEFAULT_SETTINGS.shouldShowNewTabNavigationRibbonIcons;
+
+  return {
+    locale,
+    shouldShowNavigationRibbonIcons,
+    shouldShowNewTabNavigationRibbonIcons,
+    trees: cleaned,
+  };
 }
 
 /**

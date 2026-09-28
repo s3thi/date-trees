@@ -2,15 +2,17 @@ import {
   App,
   Notice,
   PluginSettingTab,
+  type SettingDefinition,
   type SettingDefinitionItem,
 } from "obsidian";
 
 import type DateTreesPlugin from "../main";
+import type { DateTreesSettings } from "../types";
 import { unmarkDateTree } from "../core/settings";
 import { collectDateTreeErrors } from "../core/validators";
 
 /**
- * Defines the locale control and the list of configured date trees.
+ * Defines the plugin settings UI.
  */
 class DateTreesSettingTab extends PluginSettingTab {
   plugin: DateTreesPlugin;
@@ -23,31 +25,27 @@ class DateTreesSettingTab extends PluginSettingTab {
   /**
    * Describes settings for native rendering and settings search.
    */
-  getSettingDefinitions(): SettingDefinitionItem<"locale">[] {
-    // Keep folder instructions separate from the list so they cannot be deleted.
-    const foldersDesc = createFragment();
-    foldersDesc.appendText(
-      "To mark folders as date trees, right-click them in the file explorer and click ",
-    );
-    foldersDesc.createEl("strong", { text: "Mark as date tree" });
-    foldersDesc.appendText(
-      ". You can also use the commands available in the command palette.",
-    );
-
-    // Describe each folder using cached vault metadata, without reading files.
+  getSettingDefinitions(): SettingDefinitionItem<keyof DateTreesSettings>[] {
+    // Render list of configured date trees. This is a little complex because we
+    // want to validate each tree and display any errors we find inside the list
+    // UI.
     const trees = this.plugin.settings.trees;
-    const items = trees.map((entry) => {
-      const description = createFragment();
-      description.createDiv({
-        text: `Template: ${entry.templatePath || "(none)"}`,
-      });
-      for (const error of collectDateTreeErrors(this.app.vault, entry)) {
-        description.createDiv({ cls: "date-trees-error", text: error });
-      }
-      return { name: entry.folderPath, desc: description };
-    });
+    const items: SettingDefinition<keyof DateTreesSettings>[] = trees.map(
+      (entry) => ({
+        name: entry.folderPath,
+        desc: `Template: ${entry.templatePath || "(none)"}`,
+        render: (setting) => {
+          // Check the metadata for the current vault each time the row is
+          // displayed. We don't want errors encountered during app startup or a
+          // previous render to stick around forever.
+          for (const error of collectDateTreeErrors(this.app.vault, entry)) {
+            setting.descEl.createDiv({ cls: "date-trees-error", text: error });
+          }
+        },
+      }),
+    );
 
-    // Let Obsidian render and persist the locale dropdown and render the list.
+    // Let Obsidian render and persist the controls and render the folder list.
     return [
       {
         type: "group",
@@ -64,9 +62,31 @@ class DateTreesSettingTab extends PluginSettingTab {
           },
         ],
       },
-      { name: "Folders", desc: foldersDesc },
+      {
+        type: "group",
+        heading: "Ribbon buttons",
+        items: [
+          {
+            name: "Navigate in current tab",
+            desc: "Add ribbon buttons to open the previous and next date tree notes in the current tab.",
+            control: {
+              type: "toggle",
+              key: "shouldShowNavigationRibbonIcons",
+            },
+          },
+          {
+            name: "Navigate in new tab",
+            desc: "Add ribbon buttons to open the previous and next date tree notes in a new tab.",
+            control: {
+              type: "toggle",
+              key: "shouldShowNewTabNavigationRibbonIcons",
+            },
+          },
+        ],
+      },
       {
         type: "list",
+        heading: "Folders",
         emptyState: "No folders configured as date trees.",
         items,
         onDelete: (index) => {

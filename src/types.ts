@@ -32,12 +32,22 @@ interface DateTreeEntry {
 /** Plugin settings. */
 interface DateTreesSettings {
   locale: DateTreeLocale;
+  /**
+   * Enable ribbon buttons for previous and next notes in the current tab.
+   */
+  shouldShowNavigationRibbonIcons: boolean;
+  /**
+   * Enable ribbon buttons for previous and next notes in a new tab.
+   */
+  shouldShowNewTabNavigationRibbonIcons: boolean;
   trees: DateTreeEntry[];
 }
 
 /** Default plugin settings. */
 const DEFAULT_SETTINGS: DateTreesSettings = {
   locale: "english",
+  shouldShowNavigationRibbonIcons: true,
+  shouldShowNewTabNavigationRibbonIcons: false,
   trees: [],
 };
 
