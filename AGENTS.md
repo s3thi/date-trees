@@ -18,6 +18,8 @@ Run `pnpm run lint` and `pnpm run build` only when code changes; skip them for d
 - Register all DOM/app/interval listeners with `this.register*` so unload is clean and idempotent.
 - Keep startup light; batch disk access, avoid scanning the whole vault, debounce file-system reactions.
 - User-facing strings: sentence case, short, action-oriented, no jargon.
+- Name booleans as predicates (verb phrases): `hasError`, `isDirty`,
+  `shouldOpenInNewTab`, `wasUpdated`. Choose the verb that fits the meaning.
 
 ## Manual testing
 
