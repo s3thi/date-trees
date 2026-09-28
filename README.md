@@ -25,11 +25,11 @@ This structure automatically sorts in chronological order when you select "Sort 
 
 ## Basic usage
 
-- Mark an existing folder as a date tree by right-clicking it in the file explorer and selecting **Mark as date tree…**.
-- You can optionally choose a Markdown file from your vault as the tree's template, or just select **No template**.
-- Use **Open today's note in date tree** in the command palette to create and open today's note. If you have more than one tree, you'll be asked which one to use. The plugin automatically creates missing year and month folders. If the note already exists at the expected path, it opens without changing its content.
-- You can also right-click a tree folder (or any file or folder inside it) and choose **Open today's note in "Folder Name"**.
-- To unmark a tree, right-click its root folder and select **Unmark as date tree**. Unmarking a date tree does not delete or change any existing notes.
+- Mark an existing folder as a date tree by right-clicking it in the file explorer and selecting **Mark as date tree…**, or use **Mark folder as date tree…** in the command palette to pick a folder. The plugin will then ask you to choose a Markdown file from your vault as the tree's template. You can also select **No template** to create blank files. To change the template later, mark the same folder as a date tree again.
+- Use **Open today's note…** in the command palette to create and open today's note. If you have more than one date tree, the plugin will ask you which one to use. If a note for today already exists in the tree you selected, the plugin opens it without changing its contents.
+- You can also right-click a folder that has already been marked as a date tree and choose **Open today's note in "Folder Name"**. In fact, you can click _any_ file or folder inside a date tree folder to access that menu.
+- If you're editing a day note, use **Go to older note** or **Go to newer note** in the command palette or the ribbon to open the nearest existing day note in that direction. Navigation stays within the current date tree and does not create new notes.
+- To unmark a tree, right-click its root folder and select **Unmark as date tree**, or use **Unmark folder as date tree…** in the command palette. Unmarking a date tree does not delete or change any existing notes.
 
 ## Locale settings
 
