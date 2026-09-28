@@ -2,7 +2,7 @@ import type DateTreesPlugin from "../main";
 import { pickFolderAndMarkAsDateTree } from "../commands/mark-date-tree";
 import { pickFolderAndUnmarkAsDateTree } from "../commands/unmark-date-tree";
 import { pickDateTreeAndCreateTodaysNote } from "../commands/create-todays-note";
-import { openAdjacentNoteInDateTree } from "../commands/navigate-date-tree";
+import { goToChronologicallyAdjacentNote } from "../commands/navigate-date-tree";
 import { runCommand } from "./run-command";
 
 function registerCommands(plugin: DateTreesPlugin) {
@@ -31,18 +31,18 @@ function registerCommands(plugin: DateTreesPlugin) {
   });
 
   plugin.addCommand({
-    id: "open-next-note",
-    name: "Open next note",
+    id: "go-to-newer-note",
+    name: "Go to newer note",
     callback: () => {
-      runCommand(() => openAdjacentNoteInDateTree(plugin, "next"));
+      runCommand(() => goToChronologicallyAdjacentNote(plugin, "newer"));
     },
   });
 
   plugin.addCommand({
-    id: "open-previous-note",
-    name: "Open previous note",
+    id: "go-to-older-note",
+    name: "Go to older note",
     callback: () => {
-      runCommand(() => openAdjacentNoteInDateTree(plugin, "previous"));
+      runCommand(() => goToChronologicallyAdjacentNote(plugin, "older"));
     },
   });
 }

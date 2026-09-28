@@ -1,14 +1,16 @@
 import { MarkdownView, Notice } from "obsidian";
 
 import { findNearestDateTree } from "../core/date-tree-path";
-import { findNextNote, findPreviousNote } from "../core/date-tree-navigation";
+import { findNewerNote, findOlderNote } from "../core/date-tree-navigation";
 import type DateTreesPlugin from "../main";
 import { openFileInTab } from "../ui/open-file";
 
-/** Opens the adjacent day note from the active Markdown tab. */
-async function openAdjacentNoteInDateTree(
+/**
+ * Goes to the nearest day note in the requested direction.
+ */
+async function goToChronologicallyAdjacentNote(
   plugin: DateTreesPlugin,
-  direction: "next" | "previous",
+  direction: "newer" | "older",
 ): Promise<void> {
   // Get the note and tab the user is navigating from.
   const { workspace, vault } = plugin.app;
@@ -27,9 +29,9 @@ async function openAdjacentNoteInDateTree(
     return;
   }
   const result =
-    direction === "next"
-      ? findNextNote(vault, tree, currentNote)
-      : findPreviousNote(vault, tree, currentNote);
+    direction === "newer"
+      ? findNewerNote(vault, tree, currentNote)
+      : findOlderNote(vault, tree, currentNote);
   if (result.status === "invalid-tree") {
     new Notice("The root folder for this date tree is invalid or missing.");
     return;
@@ -44,7 +46,7 @@ async function openAdjacentNoteInDateTree(
   }
 
   // Keep a pinned tab on its current note. Focus an existing tab that shows
-  // the adjacent note, or open a new tab if needed.
+  // the older or newer note, or open a new tab if needed.
   if (view.leaf.getViewState().pinned) {
     await openFileInTab(workspace, result.note);
   } else {
@@ -53,4 +55,4 @@ async function openAdjacentNoteInDateTree(
   }
 }
 
-export { openAdjacentNoteInDateTree };
+export { goToChronologicallyAdjacentNote };

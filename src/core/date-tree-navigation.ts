@@ -11,7 +11,9 @@ interface CalendarDate {
   day: number;
 }
 
-/** Describes the outcome of looking for an adjacent day note. */
+/**
+ * Describes the outcome of looking for a day note in either direction.
+ */
 type NavigationResult =
   | { status: "found"; note: TFile }
   | { status: "invalid-tree" }
@@ -23,15 +25,15 @@ type NavigationResult =
  * Reports whether the tree or starting note is invalid, or no earlier note
  * exists.
  *
- * If several notes share the previous date, the first path in character order
- * wins.
+ * If several notes share the nearest older date, the first path in character
+ * order wins.
  */
-function findPreviousNote(
+function findOlderNote(
   vault: Vault,
   tree: DateTreeEntry,
   currentNote: TFile,
 ): NavigationResult {
-  return findAdjacentNote(vault, tree, currentNote, "previous");
+  return findChronologicallyAdjacentNote(vault, tree, currentNote, "older");
 }
 
 /**
@@ -39,14 +41,15 @@ function findPreviousNote(
  * Reports whether the tree or starting note is invalid, or no later note
  * exists.
  *
- * If several notes share the next date, the first path in character order wins.
+ * If several notes share the nearest newer date, the first path in character
+ * order wins.
  */
-function findNextNote(
+function findNewerNote(
   vault: Vault,
   tree: DateTreeEntry,
   currentNote: TFile,
 ): NavigationResult {
-  return findAdjacentNote(vault, tree, currentNote, "next");
+  return findChronologicallyAdjacentNote(vault, tree, currentNote, "newer");
 }
 
 /**
@@ -54,11 +57,11 @@ function findNextNote(
  * current date. Reports invalid inputs and an empty search separately. Breaks
  * ties by choosing the first path in character order.
  */
-function findAdjacentNote(
+function findChronologicallyAdjacentNote(
   vault: Vault,
   tree: DateTreeEntry,
   currentNote: TFile,
-  direction: "previous" | "next",
+  direction: "older" | "newer",
 ): NavigationResult {
   // Find this date tree's root folder.
   const dateTreeRoot =
@@ -79,9 +82,9 @@ function findAdjacentNote(
 
   // Visit only year and month folders in this tree, using Obsidian's in-memory
   // children. Ignore unrelated folders and dates in the opposite direction.
-  const isPrevious = direction === "previous";
-  let adjacentNote: TFile | null = null;
-  let adjacentDate: CalendarDate | null = null;
+  const isOlder = direction === "older";
+  let nearestNote: TFile | null = null;
+  let nearestDate: CalendarDate | null = null;
   for (const yearFolder of dateTreeRoot.children) {
     // Skip folders that don't have valid year folder names.
     if (!(yearFolder instanceof TFolder) || !/^\d{4}$/.test(yearFolder.name)) {
@@ -91,7 +94,7 @@ function findAdjacentNote(
     // Skip years in the opposite direction from the current note.
     const yearNumber = Number(yearFolder.name);
     if (
-      isPrevious ? yearNumber > currentDate.year : yearNumber < currentDate.year
+      isOlder ? yearNumber > currentDate.year : yearNumber < currentDate.year
     ) {
       continue;
     }
@@ -116,7 +119,7 @@ function findAdjacentNote(
       }
       if (
         yearNumber === currentDate.year &&
-        (isPrevious
+        (isOlder
           ? monthNumber > currentDate.month
           : monthNumber < currentDate.month)
       ) {
@@ -136,38 +139,38 @@ function findAdjacentNote(
           continue;
         }
         const currentComparison = compareDates(date, currentDate);
-        if (isPrevious ? currentComparison >= 0 : currentComparison <= 0) {
+        if (isOlder ? currentComparison >= 0 : currentComparison <= 0) {
           continue;
         }
 
         // Keep the first eligible note so later notes have a date to beat.
-        if (adjacentDate === null) {
-          adjacentNote = file;
-          adjacentDate = date;
+        if (nearestDate === null) {
+          nearestNote = file;
+          nearestDate = date;
           continue;
         }
 
         // Keep the closer date in the requested direction. If two notes share
         // that date, keep the note whose path comes first in character order.
-        const comparison = compareDates(date, adjacentDate);
-        const isCloser = isPrevious ? comparison > 0 : comparison < 0;
+        const comparison = compareDates(date, nearestDate);
+        const isCloser = isOlder ? comparison > 0 : comparison < 0;
         if (
           isCloser ||
           (comparison === 0 &&
-            adjacentNote !== null &&
-            file.path < adjacentNote.path)
+            nearestNote !== null &&
+            file.path < nearestNote.path)
         ) {
-          adjacentNote = file;
-          adjacentDate = date;
+          nearestNote = file;
+          nearestDate = date;
         }
       }
     }
   }
 
   // Return the closest note, or report that this direction has no day note.
-  return adjacentNote === null
+  return nearestNote === null
     ? { status: "no-adjacent-note" }
-    : { status: "found", note: adjacentNote };
+    : { status: "found", note: nearestNote };
 }
 
 /**
@@ -253,4 +256,4 @@ function compareDates(left: CalendarDate, right: CalendarDate): number {
   return left.day - right.day;
 }
 
-export { findPreviousNote, findNextNote };
+export { findOlderNote, findNewerNote };

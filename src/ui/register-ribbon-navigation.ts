@@ -1,15 +1,17 @@
 import type DateTreesPlugin from "../main";
-import { openAdjacentNoteInDateTree } from "../commands/navigate-date-tree";
+import { goToChronologicallyAdjacentNote } from "../commands/navigate-date-tree";
 import { runCommand } from "./run-command";
 
-/** Adds previous and next note buttons to the ribbon. */
+/**
+ * Adds older and newer note buttons to the ribbon.
+ */
 function registerRibbonNavigation(plugin: DateTreesPlugin): void {
-  plugin.addRibbonIcon("arrow-left", "Date trees: Open previous note", () => {
-    runCommand(() => openAdjacentNoteInDateTree(plugin, "previous"));
+  plugin.addRibbonIcon("arrow-left", "Date trees: Go to older note", () => {
+    runCommand(() => goToChronologicallyAdjacentNote(plugin, "older"));
   });
 
-  plugin.addRibbonIcon("arrow-right", "Date trees: Open next note", () => {
-    runCommand(() => openAdjacentNoteInDateTree(plugin, "next"));
+  plugin.addRibbonIcon("arrow-right", "Date trees: Go to newer note", () => {
+    runCommand(() => goToChronologicallyAdjacentNote(plugin, "newer"));
   });
 }
 
