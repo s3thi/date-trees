@@ -7,10 +7,12 @@ import { openFileInNewTabOrFocusExistingTab } from "../ui/open-file";
 
 /**
  * Goes to the nearest day note in the requested direction.
+ * Creates a new tab when `shouldOpenInNewTab` is true.
  */
 async function goToChronologicallyAdjacentNote(
   plugin: DateTreesPlugin,
   direction: "newer" | "older",
+  shouldOpenInNewTab = false,
 ): Promise<void> {
   // Get the note and tab the user is navigating from.
   const { workspace, vault } = plugin.app;
@@ -42,6 +44,12 @@ async function goToChronologicallyAdjacentNote(
   }
   if (result.status === "no-adjacent-note") {
     new Notice(`No ${direction} note in this date tree.`);
+    return;
+  }
+
+  // Open a new tab when requested, even if the note is already open.
+  if (shouldOpenInNewTab) {
+    await workspace.getLeaf("tab").openFile(result.note);
     return;
   }
 
