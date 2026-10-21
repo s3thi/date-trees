@@ -5,7 +5,7 @@ import { expandTemplate } from "../core/template";
 import { extractErrorMessage } from "../core/errors";
 import type DateTreesPlugin from "../main";
 import type { DateTreeEntry } from "../types";
-import { openFileInTab } from "../ui/open-file";
+import { openFileInNewTabOrFocusExistingTab } from "../ui/open-file";
 import { pick } from "../ui/picker";
 import { collectDateTreeErrors, validateDateTree } from "../core/validators";
 
@@ -90,7 +90,7 @@ export async function createTodaysNoteInTree(
   // If today's note already exists, open it and stop here.
   const existing = vault.getAbstractFileByPath(dayFilePath);
   if (existing instanceof TFile) {
-    await openFileInTab(plugin.app.workspace, existing);
+    await openFileInNewTabOrFocusExistingTab(plugin.app.workspace, existing);
     return;
   }
 
@@ -114,7 +114,7 @@ export async function createTodaysNoteInTree(
   }
 
   // Open the new note so the user can start writing.
-  await openFileInTab(plugin.app.workspace, file);
+  await openFileInNewTabOrFocusExistingTab(plugin.app.workspace, file);
 }
 
 /**

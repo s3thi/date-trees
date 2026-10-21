@@ -3,7 +3,7 @@ import { MarkdownView, Notice } from "obsidian";
 import { findNearestDateTree } from "../core/date-tree-path";
 import { findNewerNote, findOlderNote } from "../core/date-tree-navigation";
 import type DateTreesPlugin from "../main";
-import { openFileInTab } from "../ui/open-file";
+import { openFileInNewTabOrFocusExistingTab } from "../ui/open-file";
 
 /**
  * Goes to the nearest day note in the requested direction.
@@ -48,7 +48,7 @@ async function goToChronologicallyAdjacentNote(
   // Keep a pinned tab on its current note. Focus an existing tab that shows
   // the older or newer note, or open a new tab if needed.
   if (view.leaf.getViewState().pinned) {
-    await openFileInTab(workspace, result.note);
+    await openFileInNewTabOrFocusExistingTab(workspace, result.note);
   } else {
     // Replace the current note only when its tab is unpinned.
     await view.leaf.openFile(result.note);
